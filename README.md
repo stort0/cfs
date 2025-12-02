@@ -29,9 +29,9 @@ A single header implementation of `std::filesystem`/`Boost.Filesystem` in `C89`.
 
 ### OS requirements
 
-| Windows          | Linux                                 |
-|:-----------------|:--------------------------------------|
-| Windows **2000** | Kernel **2.0.38**<br/>Glibc **2.1.3** |
+| Windows           | Linux |
+|:------------------|:------|
+| Windows **2000+** | Any   |
 
 Some specific fixes are implemented for `FreeBSD` and `Darwin` but compatibility
 won't be tested.
