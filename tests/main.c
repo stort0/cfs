@@ -30,12 +30,12 @@ do {                                                                            
 #define TEST_ROOT             FS_MAKE_PATH(_TEST_ROOT)
 
 #ifdef _FS_SYMLINKS_SUPPORTED
-static fs_bool enable_symlink_tests = FS_TRUE;
+static fs_bool_t enable_symlink_tests = FS_TRUE;
 #else
-static fs_bool enable_symlink_tests = FS_FALSE;
+static fs_bool_t enable_symlink_tests = FS_FALSE;
 #endif
 
-static void _create_file(const fs_cpath path)
+static void _create_file(const fs_cpath_t path)
 {
         char *tmp = fs_path_get(path);
         FILE *f   = fopen(tmp, "w");
@@ -46,7 +46,7 @@ static void _create_file(const fs_cpath path)
         free(tmp);
 }
 
-static void _write_file(const fs_cpath path, const char *text)
+static void _write_file(const fs_cpath_t path, const char *text)
 {
         char *tmp = fs_path_get(path);
         FILE *f   = fopen(tmp, "w");
@@ -61,11 +61,11 @@ static void _write_file(const fs_cpath path, const char *text)
 
 TEST(fs_absolute, existent_path)
 {
-        const fs_path path = FS_MAKE_PATH("a/b/c/d/file1.txt");
+        const fs_path_t path = FS_MAKE_PATH("a/b/c/d/file1.txt");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_error_code_t e;
 
         result = fs_absolute(path, &e);
         FS_EXPECT_NO_EC(e);
@@ -82,11 +82,11 @@ TEST(fs_absolute, existent_path)
 
 TEST(fs_absolute, nonexistent_path)
 {
-        const fs_path path = FS_MAKE_PATH("a/nonexistent/c/d");
+        const fs_path_t path = FS_MAKE_PATH("a/nonexistent/c/d");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_error_code_t e;
 
         result = fs_absolute(path, &e);
         FS_EXPECT_NO_EC(e);
@@ -103,11 +103,11 @@ TEST(fs_absolute, nonexistent_path)
 
 TEST(fs_absolute, long_path)
 {
-        const fs_path path = EXISTENT_LONG_PATH;
+        const fs_path_t path = EXISTENT_LONG_PATH;
 
-        fs_path       result;
-        fs_path       expected;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_error_code_t e;
 
         result = fs_absolute(path, &e);
         FS_EXPECT_NO_EC(e);
@@ -125,11 +125,11 @@ TEST(fs_absolute, long_path)
 
 TEST(fs_absolute, nonexistent_long_path)
 {
-        const fs_path path = NONEXISTENT_LONG_PATH;
+        const fs_path_t path = NONEXISTENT_LONG_PATH;
 
-        fs_path       result;
-        fs_path       expected;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_error_code_t e;
 
         result = fs_absolute(path, &e);
         FS_EXPECT_NO_EC(e);
@@ -146,10 +146,10 @@ TEST(fs_absolute, nonexistent_long_path)
 
 TEST(fs_absolute, already_absolute)
 {
-        const fs_path path = TEST_ROOT FS_MAKE_PATH("/playground");
+        const fs_path_t path = TEST_ROOT FS_MAKE_PATH("/playground");
 
-        fs_path       result;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_error_code_t e;
 
         result = fs_absolute(path, &e);
         FS_EXPECT_NO_EC(e);
@@ -163,21 +163,21 @@ TEST(fs_absolute, already_absolute)
 
 TEST(fs_absolute, empty_path)
 {
-        const fs_path path = FS_MAKE_PATH("");
-        fs_error_code e;
+        const fs_path_t path = FS_MAKE_PATH("");
+        fs_error_code_t e;
 
-        const fs_path result = fs_absolute(path, &e);
+        const fs_path_t result = fs_absolute(path, &e);
         EXPECT_EQ(result, NULL);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
 }
 
 TEST(fs_canonical, existent_path)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b/../b/./c/d/./.././../e");
+        const fs_path_t path = FS_MAKE_PATH("./a/b/../b/./c/d/./.././../e");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_error_code_t e;
 
         result = fs_canonical(path, &e);
         FS_EXPECT_NO_EC(e);
@@ -195,11 +195,11 @@ TEST(fs_canonical, existent_path)
 
 TEST(fs_canonical, existent_symlink_path)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b/./c/d/../.././../../k/file6.txt");
+        const fs_path_t path = FS_MAKE_PATH("./a/b/./c/d/../.././../../k/file6.txt");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -217,31 +217,31 @@ TEST(fs_canonical, existent_symlink_path)
 
 TEST(fs_canonical, nonexistent_path)
 {
-        const fs_path path = FS_MAKE_PATH("./nonexistent/path");
-        fs_error_code e;
+        const fs_path_t path = FS_MAKE_PATH("./nonexistent/path");
+        fs_error_code_t e;
 
-        const fs_path result = fs_canonical(path, &e);
+        const fs_path_t result = fs_canonical(path, &e);
         EXPECT_EQ(result, NULL);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_no_such_file_or_directory);
 }
 
 TEST(fs_canonical, empty_path)
 {
-        const fs_path path = FS_MAKE_PATH("");
-        fs_error_code e;
+        const fs_path_t path = FS_MAKE_PATH("");
+        fs_error_code_t e;
 
-        const fs_path result = fs_canonical(path, &e);
+        const fs_path_t result = fs_canonical(path, &e);
         EXPECT_EQ(result, NULL);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
 }
 
 TEST(fs_weakly_canonical, existent_path)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b/c/../e/././file3.txt");
+        const fs_path_t path = FS_MAKE_PATH("./a/b/c/../e/././file3.txt");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_error_code_t e;
 
         result = fs_weakly_canonical(path, &e);
         FS_EXPECT_NO_EC(e);
@@ -258,11 +258,11 @@ TEST(fs_weakly_canonical, existent_path)
 
 TEST(fs_weakly_canonical, existent_symlink_path)
 {
-        const fs_path path = FS_MAKE_PATH("./l/a/b/c/../e/././file3.txt");
+        const fs_path_t path = FS_MAKE_PATH("./l/a/b/c/../e/././file3.txt");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -282,11 +282,11 @@ TEST(fs_weakly_canonical, existent_symlink_path)
 
 TEST(fs_weakly_canonical, nonexistent_path)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b/../nonexistent");
+        const fs_path_t path = FS_MAKE_PATH("./a/b/../nonexistent");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_error_code_t e;
 
         result = fs_weakly_canonical(path, &e);
         FS_EXPECT_NO_EC(e);
@@ -303,11 +303,11 @@ TEST(fs_weakly_canonical, nonexistent_path)
 
 TEST(fs_weakly_canonical, nonexistent_symlink_path)
 {
-        const fs_path path = FS_MAKE_PATH("./l/a/b/../nonexistent");
+        const fs_path_t path = FS_MAKE_PATH("./l/a/b/../nonexistent");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -327,23 +327,23 @@ TEST(fs_weakly_canonical, nonexistent_symlink_path)
 
 TEST(fs_weakly_canonical, empty_path)
 {
-        const fs_path path = FS_MAKE_PATH("");
-        fs_error_code e;
+        const fs_path_t path = FS_MAKE_PATH("");
+        fs_error_code_t e;
 
-        const fs_path result = fs_weakly_canonical(path, &e);
+        const fs_path_t result = fs_weakly_canonical(path, &e);
         EXPECT_EQ(result, NULL);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
 }
 
 TEST(fs_relative, base_in_path)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b/c/d/file1.txt");
-        const fs_path base = FS_MAKE_PATH("./a/b");
+        const fs_path_t path = FS_MAKE_PATH("./a/b/c/d/file1.txt");
+        const fs_path_t base = FS_MAKE_PATH("./a/b");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_path       check;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_path_t       check;
+        fs_error_code_t e;
 
         result = fs_relative(path, base, &e);
         FS_EXPECT_NO_EC(e);
@@ -362,13 +362,13 @@ TEST(fs_relative, base_in_path)
 
 TEST(fs_relative, base_not_in_path)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b/c/d/file1.txt");
-        const fs_path base = FS_MAKE_PATH("./j");
+        const fs_path_t path = FS_MAKE_PATH("./a/b/c/d/file1.txt");
+        const fs_path_t base = FS_MAKE_PATH("./j");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_path       check;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_path_t       check;
+        fs_error_code_t e;
 
         result = fs_relative(path, base, &e);
         FS_EXPECT_NO_EC(e);
@@ -387,13 +387,13 @@ TEST(fs_relative, base_not_in_path)
 
 TEST(fs_relative, through_symlink)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b/c/../../sym/file7.txt");
-        const fs_path base = FS_MAKE_PATH("./a/b");
+        const fs_path_t path = FS_MAKE_PATH("./a/b/c/../../sym/file7.txt");
+        const fs_path_t base = FS_MAKE_PATH("./a/b");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_path       check;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_path_t       check;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -415,12 +415,12 @@ TEST(fs_relative, through_symlink)
 
 TEST(fs_relative, path_same_as_base)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b");
-        const fs_path base = FS_MAKE_PATH("./a/b");
+        const fs_path_t path = FS_MAKE_PATH("./a/b");
+        const fs_path_t base = FS_MAKE_PATH("./a/b");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_error_code_t e;
 
         result = fs_relative(path, base, &e);
         FS_EXPECT_NO_EC(e);
@@ -433,22 +433,22 @@ TEST(fs_relative, path_same_as_base)
 
 TEST(fs_relative, empty_path)
 {
-        const fs_path path = FS_MAKE_PATH("");
-        const fs_path base = FS_MAKE_PATH("./a/b");
+        const fs_path_t path = FS_MAKE_PATH("");
+        const fs_path_t base = FS_MAKE_PATH("./a/b");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
-        const fs_path result = fs_relative(path, base, &e);
+        const fs_path_t result = fs_relative(path, base, &e);
         EXPECT_EQ(result, NULL);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
 }
 
 TEST(fs_relative, empty_base)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b/c/d/file1.txt");
-        const fs_path base = FS_MAKE_PATH("");
+        const fs_path_t path = FS_MAKE_PATH("./a/b/c/d/file1.txt");
+        const fs_path_t base = FS_MAKE_PATH("");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_relative(path, base, &e);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
@@ -456,13 +456,13 @@ TEST(fs_relative, empty_base)
 
 TEST(fs_proximate, base_in_path)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b/c/d/file1.txt");
-        const fs_path base = FS_MAKE_PATH("./a/b");
+        const fs_path_t path = FS_MAKE_PATH("./a/b/c/d/file1.txt");
+        const fs_path_t base = FS_MAKE_PATH("./a/b");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_path       check;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_path_t       check;
+        fs_error_code_t e;
 
         result = fs_proximate(path, base, &e);
         FS_EXPECT_NO_EC(e);
@@ -481,13 +481,13 @@ TEST(fs_proximate, base_in_path)
 
 TEST(fs_proximate, base_not_in_path)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b/c/d/file1.txt");
-        const fs_path base = FS_MAKE_PATH("./j");
+        const fs_path_t path = FS_MAKE_PATH("./a/b/c/d/file1.txt");
+        const fs_path_t base = FS_MAKE_PATH("./j");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_path       check;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_path_t       check;
+        fs_error_code_t e;
 
         result = fs_proximate(path, base, &e);
         FS_EXPECT_NO_EC(e);
@@ -506,13 +506,13 @@ TEST(fs_proximate, base_not_in_path)
 
 TEST(fs_proximate, through_symlink)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b/c/../../sym/file7.txt");
-        const fs_path base = FS_MAKE_PATH("./a/b");
+        const fs_path_t path = FS_MAKE_PATH("./a/b/c/../../sym/file7.txt");
+        const fs_path_t base = FS_MAKE_PATH("./a/b");
 
-        fs_path       result;
-        fs_path       check1;
-        fs_path       check2;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       check1;
+        fs_path_t       check2;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -531,12 +531,12 @@ TEST(fs_proximate, through_symlink)
 
 TEST(fs_proximate, path_same_as_base)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b");
-        const fs_path base = FS_MAKE_PATH("./a/b");
+        const fs_path_t path = FS_MAKE_PATH("./a/b");
+        const fs_path_t base = FS_MAKE_PATH("./a/b");
 
-        fs_path       result;
-        fs_path       expected;
-        fs_error_code e;
+        fs_path_t       result;
+        fs_path_t       expected;
+        fs_error_code_t e;
 
         result = fs_proximate(path, base, &e);
         FS_EXPECT_NO_EC(e);
@@ -549,12 +549,12 @@ TEST(fs_proximate, path_same_as_base)
 
 TEST(fs_proximate, empty_path)
 {
-        const fs_path path = FS_MAKE_PATH("");
-        const fs_path base = FS_MAKE_PATH("./a/b");
+        const fs_path_t path = FS_MAKE_PATH("");
+        const fs_path_t base = FS_MAKE_PATH("./a/b");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
-        const fs_path result = fs_proximate(path, base, &e);
+        const fs_path_t result = fs_proximate(path, base, &e);
         FS_EXPECT_NO_EC(e);
 
         EXPECT_EQ_PATH(result, path);
@@ -564,12 +564,12 @@ TEST(fs_proximate, empty_path)
 
 TEST(fs_proximate, empty_base)
 {
-        const fs_path path = FS_MAKE_PATH("./a/b/c/d/file1.txt");
-        const fs_path base = FS_MAKE_PATH("");
+        const fs_path_t path = FS_MAKE_PATH("./a/b/c/d/file1.txt");
+        const fs_path_t base = FS_MAKE_PATH("");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
-        const fs_path result = fs_proximate(path, base, &e);
+        const fs_path_t result = fs_proximate(path, base, &e);
         FS_EXPECT_NO_EC(e);
 
         EXPECT_EQ_PATH(result, path);
@@ -579,10 +579,10 @@ TEST(fs_proximate, empty_base)
 
 TEST(fs_copy, file)
 {
-        const fs_path src = FS_MAKE_PATH("./a/b/c/d/file0.txt");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_file");
+        const fs_path_t src = FS_MAKE_PATH("./a/b/c/d/file0.txt");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_file");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_copy(src, dst, &e);
         FS_EXPECT_NO_EC(e);
@@ -594,10 +594,10 @@ TEST(fs_copy, file)
 
 TEST(fs_copy, empty_directory)
 {
-        const fs_path src = FS_MAKE_PATH("./a/b/e/f");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_empty_directory");
+        const fs_path_t src = FS_MAKE_PATH("./a/b/e/f");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_empty_directory");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_copy(src, dst, &e);
         FS_EXPECT_NO_EC(e);
@@ -609,10 +609,10 @@ TEST(fs_copy, empty_directory)
 
 TEST(fs_copy, non_empty_directory)
 {
-        const fs_path src = FS_MAKE_PATH("./a/b/c");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_non_empty_directory");
+        const fs_path_t src = FS_MAKE_PATH("./a/b/c");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_non_empty_directory");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_copy(src, dst, &e);
         FS_EXPECT_NO_EC(e);
@@ -625,10 +625,10 @@ TEST(fs_copy, non_empty_directory)
 
 TEST(fs_copy, symlink)
 {
-        const fs_path src = FS_MAKE_PATH("./k");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_symlink");
+        const fs_path_t src = FS_MAKE_PATH("./k");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_symlink");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -644,10 +644,10 @@ TEST(fs_copy, symlink)
 
 TEST(fs_copy, empty_src)
 {
-        const fs_path src = FS_MAKE_PATH("");
-        const fs_path dst = FS_MAKE_PATH("./j");
+        const fs_path_t src = FS_MAKE_PATH("");
+        const fs_path_t dst = FS_MAKE_PATH("./j");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_copy(src, dst, &e);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
@@ -655,10 +655,10 @@ TEST(fs_copy, empty_src)
 
 TEST(fs_copy, empty_dst)
 {
-        const fs_path src = FS_MAKE_PATH("./k");
-        const fs_path dst = FS_MAKE_PATH("");
+        const fs_path_t src = FS_MAKE_PATH("./k");
+        const fs_path_t dst = FS_MAKE_PATH("");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_copy(src, dst, &e);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
@@ -666,10 +666,10 @@ TEST(fs_copy, empty_dst)
 
 TEST(fs_copy_opt, copy_symlink)
 {
-        const fs_path src = FS_MAKE_PATH("./a/sym");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_opt_copy_symlink");
+        const fs_path_t src = FS_MAKE_PATH("./a/sym");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_opt_copy_symlink");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -685,10 +685,10 @@ TEST(fs_copy_opt, copy_symlink)
 
 TEST(fs_copy_opt, skip_symlink)
 {
-        const fs_path src = FS_MAKE_PATH("./a/sym");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_opt_skip_symlink");
+        const fs_path_t src = FS_MAKE_PATH("./a/sym");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_opt_skip_symlink");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -702,11 +702,11 @@ TEST(fs_copy_opt, skip_symlink)
 
 TEST(fs_copy_opt, recursive)
 {
-        const fs_path src = FS_MAKE_PATH("./a/b");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_opt_recursive");
+        const fs_path_t src = FS_MAKE_PATH("./a/b");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_opt_recursive");
 
-        fs_error_code e;
-        fs_path       check;
+        fs_error_code_t e;
+        fs_path_t       check;
 
         fs_copy_opt(src, dst, fs_copy_options_recursive, &e);
         FS_EXPECT_NO_EC(e);
@@ -721,11 +721,11 @@ TEST(fs_copy_opt, recursive)
 
 TEST(fs_copy_opt, recursive_with_symlink_in_sub_dir)
 {
-        const fs_path src = FS_MAKE_PATH("./a");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_opt_recursive_with_symlink_in_sub_dir");
+        const fs_path_t src = FS_MAKE_PATH("./a");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_opt_recursive_with_symlink_in_sub_dir");
 
-        fs_error_code e;
-        fs_path       check;
+        fs_error_code_t e;
+        fs_path_t       check;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -742,13 +742,13 @@ TEST(fs_copy_opt, recursive_with_symlink_in_sub_dir)
 
 TEST(fs_copy_opt, recursive_with_copy_symlink)
 {
-        const fs_path src          = FS_MAKE_PATH("./a");
-        const fs_path dst          = FS_MAKE_PATH("./playground/fs_copy_opt_recursive_with_copy_symlink");
-        const fs_copy_options opts = fs_copy_options_recursive | fs_copy_options_copy_symlinks;
+        const fs_path_t src          = FS_MAKE_PATH("./a");
+        const fs_path_t dst          = FS_MAKE_PATH("./playground/fs_copy_opt_recursive_with_copy_symlink");
+        const fs_copy_options_t opts = fs_copy_options_recursive | fs_copy_options_copy_symlinks;
 
-        fs_error_code e;
-        fs_path       check1;
-        fs_path       check2;
+        fs_error_code_t e;
+        fs_path_t       check1;
+        fs_path_t       check2;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -771,13 +771,13 @@ TEST(fs_copy_opt, recursive_with_copy_symlink)
 
 TEST(fs_copy_opt, recursive_with_skip_symlink)
 {
-        const fs_path src          = FS_MAKE_PATH("./a");
-        const fs_path dst          = FS_MAKE_PATH("./playground/fs_copy_opt_recursive_with_skip_symlink");
-        const fs_copy_options opts = fs_copy_options_recursive | fs_copy_options_skip_symlinks;
+        const fs_path_t src          = FS_MAKE_PATH("./a");
+        const fs_path_t dst          = FS_MAKE_PATH("./playground/fs_copy_opt_recursive_with_skip_symlink");
+        const fs_copy_options_t opts = fs_copy_options_recursive | fs_copy_options_skip_symlinks;
 
-        fs_error_code e;
-        fs_path       check1;
-        fs_path       check2;
+        fs_error_code_t e;
+        fs_path_t       check1;
+        fs_path_t       check2;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -800,13 +800,13 @@ TEST(fs_copy_opt, recursive_with_skip_symlink)
 
 TEST(fs_copy_opt, recursive_with_directories_only)
 {
-        const fs_path src          = FS_MAKE_PATH("./a");
-        const fs_path dst          = FS_MAKE_PATH("./playground/fs_copy_opt_recursive_with_directories_only");
-        const fs_copy_options opts = fs_copy_options_recursive | fs_copy_options_directories_only;
+        const fs_path_t src          = FS_MAKE_PATH("./a");
+        const fs_path_t dst          = FS_MAKE_PATH("./playground/fs_copy_opt_recursive_with_directories_only");
+        const fs_copy_options_t opts = fs_copy_options_recursive | fs_copy_options_directories_only;
 
-        fs_error_code e;
-        fs_path       check1;
-        fs_path       check2;
+        fs_error_code_t e;
+        fs_path_t       check1;
+        fs_path_t       check2;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -830,10 +830,10 @@ TEST(fs_copy_opt, recursive_with_directories_only)
 
 TEST(fs_copy_opt, create_symlink_on_directory)
 {
-        const fs_path src = FS_MAKE_PATH("./a");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_opt_create_symlink_on_directory");
+        const fs_path_t src = FS_MAKE_PATH("./a");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_opt_create_symlink_on_directory");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -844,10 +844,10 @@ TEST(fs_copy_opt, create_symlink_on_directory)
 
 TEST(fs_copy_opt, create_symlink_on_file)
 {
-        const fs_path src = FS_MAKE_PATH("./a/b/c/d/file0.txt");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_opt_create_symlink_on_file");
+        const fs_path_t src = FS_MAKE_PATH("./a/b/c/d/file0.txt");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_opt_create_symlink_on_file");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -862,10 +862,10 @@ TEST(fs_copy_opt, create_symlink_on_file)
 
 TEST(fs_copy_opt, directories_only_on_directory)
 {
-        const fs_path src = FS_MAKE_PATH("./a/b/c/d");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_opt_directories_only_on_directory");
+        const fs_path_t src = FS_MAKE_PATH("./a/b/c/d");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_opt_directories_only_on_directory");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_copy_opt(src, dst, fs_copy_options_directories_only, &e);
         FS_EXPECT_NO_EC(e);
@@ -877,10 +877,10 @@ TEST(fs_copy_opt, directories_only_on_directory)
 
 TEST(fs_copy_opt, directories_only_on_file)
 {
-        const fs_path src = FS_MAKE_PATH("./a/b/c/d/file0.txt");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_opt_directories_only_on_file");
+        const fs_path_t src = FS_MAKE_PATH("./a/b/c/d/file0.txt");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_opt_directories_only_on_file");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_copy_opt(src, dst, fs_copy_options_directories_only, &e);
         FS_EXPECT_NO_EC(e);
@@ -891,13 +891,13 @@ TEST(fs_copy_opt, directories_only_on_file)
 
 TEST(fs_copy_opt, overwrite_existing)
 {
-        const fs_path src = FS_MAKE_PATH("./a/");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_opt_overwrite_existing");
+        const fs_path_t src = FS_MAKE_PATH("./a/");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_opt_overwrite_existing");
 
-        fs_error_code     e;
-        fs_file_time_type dsttime;
-        fs_file_time_type srctime;
-        fs_file_time_type check;
+        fs_error_code_t     e;
+        fs_file_time_type_t dsttime;
+        fs_file_time_type_t srctime;
+        fs_file_time_type_t check;
 
         fs_create_directory(dst, &e);
         FS_EXPECT_NO_EC(e);
@@ -929,13 +929,13 @@ TEST(fs_copy_opt, overwrite_existing)
 
 TEST(fs_copy_opt, skip_existing_older)
 {
-        const fs_path src = FS_MAKE_PATH("./a/");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_opt_skip_existing_older");
+        const fs_path_t src = FS_MAKE_PATH("./a/");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_opt_skip_existing_older");
 
-        fs_error_code     e;
-        fs_file_time_type dsttime;
-        fs_file_time_type srctime;
-        fs_file_time_type check;
+        fs_error_code_t     e;
+        fs_file_time_type_t dsttime;
+        fs_file_time_type_t srctime;
+        fs_file_time_type_t check;
 
         fs_create_directory(dst, &e);
         FS_EXPECT_NO_EC(e);
@@ -963,13 +963,13 @@ TEST(fs_copy_opt, skip_existing_older)
 
 TEST(fs_copy_opt, update_existing_newer)
 {
-        const fs_path src = FS_MAKE_PATH("./a/");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_opt_update_existing_newer");
+        const fs_path_t src = FS_MAKE_PATH("./a/");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_opt_update_existing_newer");
 
-        fs_error_code     e;
-        fs_file_time_type dsttime;
-        fs_file_time_type srctime;
-        fs_file_time_type check;
+        fs_error_code_t     e;
+        fs_file_time_type_t dsttime;
+        fs_file_time_type_t srctime;
+        fs_file_time_type_t check;
 
         fs_create_directory(dst, &e);
         FS_EXPECT_NO_EC(e);
@@ -1001,13 +1001,13 @@ TEST(fs_copy_opt, update_existing_newer)
 
 TEST(fs_copy_opt, update_existing_older)
 {
-        const fs_path src = FS_MAKE_PATH("./a/");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_opt_update_existing_older");
+        const fs_path_t src = FS_MAKE_PATH("./a/");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_opt_update_existing_older");
 
-        fs_error_code     e;
-        fs_file_time_type dsttime;
-        fs_file_time_type srctime;
-        fs_file_time_type check;
+        fs_error_code_t     e;
+        fs_file_time_type_t dsttime;
+        fs_file_time_type_t srctime;
+        fs_file_time_type_t check;
 
         fs_create_directory(dst, &e);
         FS_EXPECT_NO_EC(e);
@@ -1035,10 +1035,10 @@ TEST(fs_copy_opt, update_existing_older)
 
 TEST(fs_copy_opt, empty_src)
 {
-        const fs_path src = FS_MAKE_PATH("");
-        const fs_path dst = FS_MAKE_PATH("./j");
+        const fs_path_t src = FS_MAKE_PATH("");
+        const fs_path_t dst = FS_MAKE_PATH("./j");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_copy_opt(src, dst, fs_copy_options_none, &e);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
@@ -1046,10 +1046,10 @@ TEST(fs_copy_opt, empty_src)
 
 TEST(fs_copy_opt, empty_dst)
 {
-        const fs_path src = FS_MAKE_PATH("./k");
-        const fs_path dst = FS_MAKE_PATH("");
+        const fs_path_t src = FS_MAKE_PATH("./k");
+        const fs_path_t dst = FS_MAKE_PATH("");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_copy_opt(src, dst, fs_copy_options_none, &e);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
@@ -1057,10 +1057,10 @@ TEST(fs_copy_opt, empty_dst)
 
 TEST(fs_copy_file, on_file)
 {
-        const fs_path src = FS_MAKE_PATH("./h/file5.txt");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_file_on_file");
+        const fs_path_t src = FS_MAKE_PATH("./h/file5.txt");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_file_on_file");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_copy_file(src, dst, &e);
         FS_EXPECT_NO_EC(e);
@@ -1074,10 +1074,10 @@ TEST(fs_copy_file, on_file)
 
 TEST(fs_copy_file, on_directory)
 {
-        const fs_path src = FS_MAKE_PATH("./h");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_file_on_directory");
+        const fs_path_t src = FS_MAKE_PATH("./h");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_file_on_directory");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_copy_file(src, dst, &e);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
@@ -1085,10 +1085,10 @@ TEST(fs_copy_file, on_directory)
 
 TEST(fs_copy_file, on_symlink)
 {
-        const fs_path src = FS_MAKE_PATH("./h");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_file_on_symlink");
+        const fs_path_t src = FS_MAKE_PATH("./h");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_file_on_symlink");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -1099,10 +1099,10 @@ TEST(fs_copy_file, on_symlink)
 
 TEST(fs_copy_file_opt, overwrite_existing)
 {
-        const fs_path src = FS_MAKE_PATH("./h/file5.txt");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_file_opt_overwrite_existing");
+        const fs_path_t src = FS_MAKE_PATH("./h/file5.txt");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_file_opt_overwrite_existing");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         _write_file(dst, "text");
 
@@ -1118,10 +1118,10 @@ TEST(fs_copy_file_opt, overwrite_existing)
 
 TEST(fs_copy_file_opt, skip_existing)
 {
-        const fs_path src = FS_MAKE_PATH("./h/file5.txt");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_file_opt_skip_existing");
+        const fs_path_t src = FS_MAKE_PATH("./h/file5.txt");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_file_opt_skip_existing");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         _write_file(dst, "text");
 
@@ -1137,12 +1137,12 @@ TEST(fs_copy_file_opt, skip_existing)
 
 TEST(fs_copy_file_opt, update_existing_newer)
 {
-        const fs_path src = FS_MAKE_PATH("./h/file5.txt");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_file_opt_update_existing_newer");
+        const fs_path_t src = FS_MAKE_PATH("./h/file5.txt");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_file_opt_update_existing_newer");
 
-        fs_file_time_type dsttime;
-        fs_file_time_type srctime;
-        fs_error_code     e;
+        fs_file_time_type_t dsttime;
+        fs_file_time_type_t srctime;
+        fs_error_code_t     e;
 
         _write_file(dst, "text");
 
@@ -1166,12 +1166,12 @@ TEST(fs_copy_file_opt, update_existing_newer)
 
 TEST(fs_copy_file_opt, update_existing_older)
 {
-        const fs_path src = FS_MAKE_PATH("./h/file5.txt");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_file_opt_update_existing_older");
+        const fs_path_t src = FS_MAKE_PATH("./h/file5.txt");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_file_opt_update_existing_older");
 
-        fs_file_time_type dsttime;
-        fs_file_time_type srctime;
-        fs_error_code     e;
+        fs_file_time_type_t dsttime;
+        fs_file_time_type_t srctime;
+        fs_error_code_t     e;
 
         _write_file(dst, "text");
 
@@ -1195,10 +1195,10 @@ TEST(fs_copy_file_opt, update_existing_older)
 
 TEST(fs_copy_symlink, on_symlink)
 {
-        const fs_path src = FS_MAKE_PATH("./k");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_symlink_on_symlink");
+        const fs_path_t src = FS_MAKE_PATH("./k");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_symlink_on_symlink");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -1213,10 +1213,10 @@ TEST(fs_copy_symlink, on_symlink)
 
 TEST(fs_copy_symlink, on_file)
 {
-        const fs_path src = FS_MAKE_PATH("./j/file6.txt");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_symlink_on_file");
+        const fs_path_t src = FS_MAKE_PATH("./j/file6.txt");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_symlink_on_file");
         
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -1227,10 +1227,10 @@ TEST(fs_copy_symlink, on_file)
 
 TEST(fs_copy_symlink, on_directory)
 {
-        const fs_path src = FS_MAKE_PATH("./j");
-        const fs_path dst = FS_MAKE_PATH("./playground/fs_copy_symlink_on_directory");
+        const fs_path_t src = FS_MAKE_PATH("./j");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/fs_copy_symlink_on_directory");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -1241,7 +1241,7 @@ TEST(fs_copy_symlink, on_directory)
 
 TEST(fs_create_directory, new_directory)
 {
-        const fs_path dir = FS_MAKE_PATH("./playground/fs_create_directory_new_directory");
+        const fs_path_t dir = FS_MAKE_PATH("./playground/fs_create_directory_new_directory");
 
         EXPECT_TRUE(fs_create_directory(dir, NULL));
         EXPECT_TRUE(fs_is_directory(dir, NULL));
@@ -1251,9 +1251,9 @@ TEST(fs_create_directory, new_directory)
 
 TEST(fs_create_directory, existing_directory)
 {
-        const fs_path dir = FS_MAKE_PATH("./playground");
+        const fs_path_t dir = FS_MAKE_PATH("./playground");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         EXPECT_FALSE(fs_create_directory(dir, &e));
         FS_EXPECT_NO_EC(e);
@@ -1261,8 +1261,8 @@ TEST(fs_create_directory, existing_directory)
 
 TEST(fs_create_directory_cp, new_directory)
 {
-        const fs_path dst = FS_MAKE_PATH("./playground/new_dir_cp");
-        const fs_path src = FS_MAKE_PATH("./h");
+        const fs_path_t dst = FS_MAKE_PATH("./playground/new_dir_cp");
+        const fs_path_t src = FS_MAKE_PATH("./h");
 
         EXPECT_TRUE(fs_create_directory_cp(dst, src, NULL));
         EXPECT_TRUE(fs_is_directory(dst, NULL));
@@ -1272,10 +1272,10 @@ TEST(fs_create_directory_cp, new_directory)
 
 TEST(fs_create_directory_cp, existing_directory)
 {
-        const fs_path dst = FS_MAKE_PATH("./j");
-        const fs_path src = FS_MAKE_PATH("./h");
+        const fs_path_t dst = FS_MAKE_PATH("./j");
+        const fs_path_t src = FS_MAKE_PATH("./h");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         EXPECT_FALSE(fs_create_directory_cp(dst, src, &e));
         FS_EXPECT_NO_EC(e);
@@ -1283,11 +1283,11 @@ TEST(fs_create_directory_cp, existing_directory)
 
 TEST(fs_create_directories, nested_path)
 {
-        const fs_path dir  = FS_MAKE_PATH("./playground/nested1/nested2/nested3");
-        const fs_path base = FS_MAKE_PATH("./playground/nested1");
+        const fs_path_t dir  = FS_MAKE_PATH("./playground/nested1/nested2/nested3");
+        const fs_path_t base = FS_MAKE_PATH("./playground/nested1");
 
-        fs_error_code e;
-        fs_bool       created;
+        fs_error_code_t e;
+        fs_bool_t       created;
 
         created = fs_create_directories(dir, &e);
         EXPECT_TRUE(created);
@@ -1300,11 +1300,11 @@ TEST(fs_create_directories, nested_path)
 
 TEST(fs_create_directories, non_nested_path)
 {
-        const fs_path dir  = FS_MAKE_PATH("./playground/nested1");
-        const fs_path base = FS_MAKE_PATH("./playground/nested1");
+        const fs_path_t dir  = FS_MAKE_PATH("./playground/nested1");
+        const fs_path_t base = FS_MAKE_PATH("./playground/nested1");
 
-        fs_error_code e;
-        fs_bool       created;
+        fs_error_code_t e;
+        fs_bool_t       created;
 
         created = fs_create_directories(dir, &e);
         EXPECT_TRUE(created);
@@ -1317,11 +1317,11 @@ TEST(fs_create_directories, non_nested_path)
 
 TEST(fs_create_directories, long_path)
 {
-        const fs_path dir  = FS_MAKE_PATH("./playground/nested1/nested2/nested3/nested4/nested5/nested6/nested7/nested8/nested9/nested10/nested11/nested12/nested13/nested14/nested15/nested16/nested17/nested18/nested19/nested20/nested21/nested22/nested23/nested24/nested25/nested26/nested27/nested28/nested29/nested30");
-        const fs_path base = FS_MAKE_PATH("./playground/nested1");
+        const fs_path_t dir  = FS_MAKE_PATH("./playground/nested1/nested2/nested3/nested4/nested5/nested6/nested7/nested8/nested9/nested10/nested11/nested12/nested13/nested14/nested15/nested16/nested17/nested18/nested19/nested20/nested21/nested22/nested23/nested24/nested25/nested26/nested27/nested28/nested29/nested30");
+        const fs_path_t base = FS_MAKE_PATH("./playground/nested1");
 
-        fs_error_code e;
-        fs_bool       created;
+        fs_error_code_t e;
+        fs_bool_t       created;
 
         created = fs_create_directories(dir, &e);
         EXPECT_TRUE(created);
@@ -1334,12 +1334,11 @@ TEST(fs_create_directories, long_path)
 
 TEST(fs_create_hard_link, to_file)
 {
-        const fs_path target = FS_MAKE_PATH("./j/file6.txt");
-        const fs_path link   = FS_MAKE_PATH("./playground/fs_create_hard_link_to_file");
+        const fs_path_t target = FS_MAKE_PATH("./j/file6.txt");
+        const fs_path_t link   = FS_MAKE_PATH("./playground/fs_create_hard_link_to_file");
 
-        fs_error_code e;
-
-        fs_umax links;
+        fs_error_code_t e;
+        fs_umax_t       links;
 
         _create_file(target);
 
@@ -1357,10 +1356,10 @@ TEST(fs_create_hard_link, to_file)
 
 TEST(fs_create_hard_link, to_directory)
 {
-        const fs_path target = FS_MAKE_PATH("./playground/fs_create_hard_link_to_directory1");
-        const fs_path link   = FS_MAKE_PATH("./playground/fs_create_hard_link_to_directory2");
+        const fs_path_t target = FS_MAKE_PATH("./playground/fs_create_hard_link_to_directory1");
+        const fs_path_t link   = FS_MAKE_PATH("./playground/fs_create_hard_link_to_directory2");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         fs_create_directory(target, &e);
         FS_EXPECT_NO_EC(e);
@@ -1373,10 +1372,10 @@ TEST(fs_create_hard_link, to_directory)
 
 TEST(fs_create_symlink, normal_path)
 {
-        const fs_path target = FS_MAKE_PATH("./h/file5.txt");
-        const fs_path link   = FS_MAKE_PATH("./playground/fs_create_symlink_to_file");
+        const fs_path_t target = FS_MAKE_PATH("./h/file5.txt");
+        const fs_path_t link   = FS_MAKE_PATH("./playground/fs_create_symlink_to_file");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -1391,10 +1390,10 @@ TEST(fs_create_symlink, normal_path)
 
 TEST(fs_create_symlink, empty_target)
 {
-        const fs_path target = FS_MAKE_PATH("");
-        const fs_path link   = FS_MAKE_PATH("./playground/fs_create_symlink_empty_target");
+        const fs_path_t target = FS_MAKE_PATH("");
+        const fs_path_t link   = FS_MAKE_PATH("./playground/fs_create_symlink_empty_target");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -1405,10 +1404,10 @@ TEST(fs_create_symlink, empty_target)
 
 TEST(fs_create_symlink, empty_link)
 {
-        const fs_path target = FS_MAKE_PATH("./h/file5.txt");
-        const fs_path link   = FS_MAKE_PATH("");
+        const fs_path_t target = FS_MAKE_PATH("./h/file5.txt");
+        const fs_path_t link   = FS_MAKE_PATH("");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -1419,10 +1418,10 @@ TEST(fs_create_symlink, empty_link)
 
 TEST(fs_create_directory_symlink, normal_path)
 {
-        const fs_path target = FS_MAKE_PATH("./h");
-        const fs_path link   = FS_MAKE_PATH("./playground/fs_create_symlink_to_directory");
+        const fs_path_t target = FS_MAKE_PATH("./h");
+        const fs_path_t link   = FS_MAKE_PATH("./playground/fs_create_symlink_to_directory");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -1437,10 +1436,10 @@ TEST(fs_create_directory_symlink, normal_path)
 
 TEST(fs_create_directory_symlink, empty_target)
 {
-        const fs_path target = FS_MAKE_PATH("");
-        const fs_path link   = FS_MAKE_PATH("./playground/fs_create_directory_symlink_empty_target");
+        const fs_path_t target = FS_MAKE_PATH("");
+        const fs_path_t link   = FS_MAKE_PATH("./playground/fs_create_directory_symlink_empty_target");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -1451,10 +1450,10 @@ TEST(fs_create_directory_symlink, empty_target)
 
 TEST(fs_create_directory_symlink, empty_link)
 {
-        const fs_path target = FS_MAKE_PATH("./h");
-        const fs_path link   = FS_MAKE_PATH("");
+        const fs_path_t target = FS_MAKE_PATH("./h");
+        const fs_path_t link   = FS_MAKE_PATH("");
 
-        fs_error_code e;
+        fs_error_code_t e;
 
         if (!enable_symlink_tests)
                 SKIP_TEST();
@@ -1466,29 +1465,29 @@ TEST(fs_create_directory_symlink, empty_link)
 /*
 TEST(fs_current_path, is_correct)
 {
-        fs_error_code e;
+        fs_error_code_t e;
 
-        const fs_cpath cur = fs_current_path(&e);
+        const fs_cpath_t cur = fs_current_path(&e);
         FS_EXPECT_NO_EC(e);
 
-        const fs_path stdcur = fs::current_path();
+        const fs_path_t stdcur = fs::current_path();
         EXPECT_TRUE(fs_equivalent(cur, stdcur, &e));
 }
 
 TEST(fs_set_current_path, changes_cwd_correctly)
 {
-        const fs_path path = "./a";
-        fs_error_code e;
+        const fs_path_t path = "./a";
+        fs_error_code_t e;
 
-        const fs_cpath orig = fs_current_path(&e);
+        const fs_cpath_t orig = fs_current_path(&e);
         FS_EXPECT_NO_EC(e);
 
         fs_set_current_path(path, &e);
         FS_EXPECT_NO_EC(e);
 
-        const fs_cpath cur = fs_current_path(&e);
+        const fs_cpath_t cur = fs_current_path(&e);
         FS_EXPECT_NO_EC(e);
-        const fs_path test = fs_path_append(orig, path, &e);
+        const fs_path_t test = fs_path_append(orig, path, &e);
         FS_EXPECT_NO_EC(e);
 
         EXPECT_TRUE(fs_equivalent(cur, test, &e));
@@ -1499,60 +1498,60 @@ TEST(fs_set_current_path, changes_cwd_correctly)
 
 TEST(fs_exists, on_file)
 {
-        const fs_path path = "./j/file6.txt";
+        const fs_path_t path = "./j/file6.txt";
         EXPECT_TRUE(fs_exists(path, nullptr));
 }
 
 TEST(fs_exists, on_directory)
 {
-        const fs_path path = "./a";
+        const fs_path_t path = "./a";
         EXPECT_TRUE(fs_exists(path, nullptr));
 }
 
 TEST(fs_exists, on_symlink)
 {
-        const fs_path path = "./k";
+        const fs_path_t path = "./k";
         EXPECT_TRUE(fs_exists(path, nullptr));
 }
 
 TEST(fs_exists, through_symlink)
 {
-        const fs_path path = "./k/file6.txt";
+        const fs_path_t path = "./k/file6.txt";
         EXPECT_TRUE(fs_exists(path, nullptr));
 }
 
 TEST(fs_equivalent, on_file)
 {
-        const fs_path p1 = "./j/file6.txt";
-        const fs_path p2 = "./j/file6.txt";
+        const fs_path_t p1 = "./j/file6.txt";
+        const fs_path_t p2 = "./j/file6.txt";
         EXPECT_TRUE(fs_equivalent(p1, p2, nullptr));
 }
 
 TEST(fs_equivalent, on_directory)
 {
-        const fs_path p1 = "./j";
-        const fs_path p2 = "./j";
+        const fs_path_t p1 = "./j";
+        const fs_path_t p2 = "./j";
         EXPECT_TRUE(fs_equivalent(p1, p2, nullptr));
 }
 
 TEST(fs_equivalent, on_symlink)
 {
-        const fs_path p1 = "./k";
-        const fs_path p2 = "./k";
+        const fs_path_t p1 = "./k";
+        const fs_path_t p2 = "./k";
         EXPECT_TRUE(fs_equivalent(p1, p2, nullptr));
 }
 
 TEST(fs_equivalent, though_symlink)
 {
-        const fs_path p1 = "./j/file6.txt";
-        const fs_path p2 = "./k/file6.txt";
+        const fs_path_t p1 = "./j/file6.txt";
+        const fs_path_t p2 = "./k/file6.txt";
         EXPECT_TRUE(fs_equivalent(p1, p2, nullptr));
 }
 
 TEST(fs_file_size, on_empty_file)
 {
-        const fs_path path = "./j/file6.txt";
-        fs_error_code e;
+        const fs_path_t path = "./j/file6.txt";
+        fs_error_code_t e;
 
         path.create_file() << "";
         EXPECT_EQ(fs_file_size(path, &e), 0);
@@ -1560,8 +1559,8 @@ TEST(fs_file_size, on_empty_file)
 
 TEST(fs_file_size, on_non_empty_file)
 {
-        const fs_path path = "./j/file6.txt";
-        fs_error_code e;
+        const fs_path_t path = "./j/file6.txt";
+        fs_error_code_t e;
 
         path.create_file() << "text";
         EXPECT_EQ(fs_file_size(path, &e), fs::file_size(path));
@@ -1570,8 +1569,8 @@ TEST(fs_file_size, on_non_empty_file)
 
 TEST(fs_file_size, on_directory)
 {
-        const fs_path path = "./j";
-        fs_error_code e;
+        const fs_path_t path = "./j";
+        fs_error_code_t e;
 
         path.create_file() << "text";
 
@@ -1581,25 +1580,25 @@ TEST(fs_file_size, on_directory)
 
 TEST(fs_file_size, on_symlink_to_file)
 {
-        const fs_path path = "./filesym";
-        fs_error_code e;
+        const fs_path_t path = "./filesym";
+        fs_error_code_t e;
 
         EXPECT_EQ(fs_file_size(path, &e), 0);
 }
 
 TEST(fs_hard_link_count, on_file_without_links)
 {
-        const fs_path path = "./j/file6.txt";
-        fs_error_code e;
+        const fs_path_t path = "./j/file6.txt";
+        fs_error_code_t e;
 
         EXPECT_EQ(fs_hard_link_count(path, &e), 0);
 }
 
 TEST(fs_hard_link_count, on_file_with_links)
 {
-        const fs_path path = "./j/file6.txt";
-        const fs_path tmp  = "./playground/fs_hard_link_count_on_file_with_links.txt";
-        fs_error_code e;
+        const fs_path_t path = "./j/file6.txt";
+        const fs_path_t tmp  = "./playground/fs_hard_link_count_on_file_with_links.txt";
+        fs_error_code_t e;
 
         fs_create_hard_link(path, tmp, &e);
         FS_EXPECT_NO_EC(e);
@@ -1612,8 +1611,8 @@ TEST(fs_hard_link_count, on_file_with_links)
 
 TEST(fs_hard_link_count, on_directory)
 {
-        const fs_path path = "./j";
-        fs_error_code e;
+        const fs_path_t path = "./j";
+        fs_error_code_t e;
 
         fs_hard_link_count(path, &e);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_is_a_directory);
@@ -1621,20 +1620,20 @@ TEST(fs_hard_link_count, on_directory)
 
 TEST(fs_last_write_time, on_file)
 {
-        const fs_path path = "./j/file6.txt";
+        const fs_path_t path = "./j/file6.txt";
         EXPECT_THAT(fs::last_write_time(path), gtutils::matches(fs_last_write_time(path, nullptr)));
 }
 
 TEST(fs_last_write_time, on_directory)
 {
-        const fs_path path = "./a";
+        const fs_path_t path = "./a";
         EXPECT_THAT(fs::last_write_time(path), gtutils::matches(fs_last_write_time(path, nullptr)));
 }
 
 TEST(fs_set_last_write_time, on_file)
 {
-        const fs_path path = "./j/file6.txt";
-        fs_error_code e;
+        const fs_path_t path = "./j/file6.txt";
+        fs_error_code_t e;
 
         const fs_file_time_type og = fs_last_write_time(path, &e);
         FS_EXPECT_NO_EC(e);
@@ -1658,8 +1657,8 @@ TEST(fs_set_last_write_time, on_file)
 
 TEST(fs_set_last_write_time, on_directory)
 {
-        const fs_path path = "./j";
-        fs_error_code e;
+        const fs_path_t path = "./j";
+        fs_error_code_t e;
 
         const fs_file_time_type og = fs_last_write_time(path, &e);
         FS_EXPECT_NO_EC(e);
@@ -1683,8 +1682,8 @@ TEST(fs_set_last_write_time, on_directory)
 
 TEST(fs_permissions, on_file)
 {
-        const fs_path path = "./j/file6.txt";
-        fs_error_code e;
+        const fs_path_t path = "./j/file6.txt";
+        fs_error_code_t e;
 
         constexpr auto perms = fs_perms_all & ~_fs_perms_All_write;
         fs_permissions(path, perms, &e);
@@ -1697,8 +1696,8 @@ TEST(fs_permissions, on_file)
 
 TEST(fs_permissions, on_directory)
 {
-        const fs_path path = "./j";
-        fs_error_code e;
+        const fs_path_t path = "./j";
+        fs_error_code_t e;
 
         constexpr auto perms = fs_perms_all & ~_fs_perms_All_write;
         fs_permissions(path, perms, &e);
@@ -1711,8 +1710,8 @@ TEST(fs_permissions, on_directory)
 
 TEST(fs_permissions, on_symlink)
 {
-        const fs_path path = "./j";
-        fs_error_code e;
+        const fs_path_t path = "./j";
+        fs_error_code_t e;
 
         constexpr auto perms = fs_perms_all & ~_fs_perms_All_write;
         fs_permissions(path, perms, &e);
@@ -1725,8 +1724,8 @@ TEST(fs_permissions, on_symlink)
 
 TEST(fs_permissions_opt, replace_on_file)
 {
-        const fs_path path = "./j/file6.txt";
-        fs_error_code e;
+        const fs_path_t path = "./j/file6.txt";
+        fs_error_code_t e;
 
         constexpr auto perms = fs_perms_all & ~_fs_perms_All_write;
         fs_permissions_opt(path, perms, fs_perm_options_replace, &e);
@@ -1739,8 +1738,8 @@ TEST(fs_permissions_opt, replace_on_file)
 
 TEST(fs_permissions_opt, replace_on_directory)
 {
-        const fs_path path = "./j";
-        fs_error_code e;
+        const fs_path_t path = "./j";
+        fs_error_code_t e;
 
         constexpr auto perms = fs_perms_all & ~_fs_perms_All_write;
         fs_permissions_opt(path, perms, fs_perm_options_replace, &e);
@@ -1753,8 +1752,8 @@ TEST(fs_permissions_opt, replace_on_directory)
 
 TEST(fs_permissions_opt, replace_on_symlink)
 {
-        const fs_path path = "./k";
-        fs_error_code e;
+        const fs_path_t path = "./k";
+        fs_error_code_t e;
 
         constexpr auto perms = fs_perms_all & ~_fs_perms_All_write;
         fs_permissions_opt(path, perms, fs_perm_options_replace, &e);
@@ -1768,8 +1767,8 @@ TEST(fs_permissions_opt, replace_on_symlink)
 #ifdef _WIN32 // fchmodat does not support AT_SYMLINK_NOFOLLOW (yet)
 TEST(fs_permissions_opt, replace_with_nofollow_on_symlink)
 {
-        const fs_path path = "./k";
-        fs_error_code e;
+        const fs_path_t path = "./k";
+        fs_error_code_t e;
 
         constexpr auto perms = fs_perms_all & ~_fs_perms_All_write;
         constexpr auto opts  = fs_perm_options_replace | fs_perm_options_nofollow;
@@ -1784,8 +1783,8 @@ TEST(fs_permissions_opt, replace_with_nofollow_on_symlink)
 
 TEST(fs_permissions_opt, add_on_file)
 {
-        const fs_path path = "./j/file6.txt";
-        fs_error_code e;
+        const fs_path_t path = "./j/file6.txt";
+        fs_error_code_t e;
 
         fs_permissions(path, fs_perms_all & ~_fs_perms_All_write, &e);
         FS_EXPECT_NO_EC(e);
@@ -1798,8 +1797,8 @@ TEST(fs_permissions_opt, add_on_file)
 
 TEST(fs_permissions_opt, add_on_directory)
 {
-        const fs_path path = "./j";
-        fs_error_code e;
+        const fs_path_t path = "./j";
+        fs_error_code_t e;
 
         fs_permissions(path, fs_perms_all & ~_fs_perms_All_write, &e);
         FS_EXPECT_NO_EC(e);
@@ -1812,8 +1811,8 @@ TEST(fs_permissions_opt, add_on_directory)
 
 TEST(fs_permissions_opt, add_on_symlink)
 {
-        const fs_path path = "./k";
-        fs_error_code e;
+        const fs_path_t path = "./k";
+        fs_error_code_t e;
 
         fs_permissions(path, fs_perms_all & ~_fs_perms_All_write, &e);
         FS_EXPECT_NO_EC(e);
@@ -1827,8 +1826,8 @@ TEST(fs_permissions_opt, add_on_symlink)
 #ifdef _WIN32 // fchmodat does not support AT_SYMLINK_NOFOLLOW (yet)
 TEST(fs_permissions_opt, add_with_nofollow_on_symlink)
 {
-        const fs_path path = "./k";
-        fs_error_code e;
+        const fs_path_t path = "./k";
+        fs_error_code_t e;
 
         constexpr auto perms = fs_perms_all & ~_fs_perms_All_write;
         fs_permissions_opt(path, perms, fs_perm_options_nofollow, &e);
@@ -1844,8 +1843,8 @@ TEST(fs_permissions_opt, add_with_nofollow_on_symlink)
 
 TEST(fs_permissions_opt, remove_on_file)
 {
-        const fs_path path = "./j/file6.txt";
-        fs_error_code e;
+        const fs_path_t path = "./j/file6.txt";
+        fs_error_code_t e;
 
         fs_permissions_opt(path, _fs_perms_All_write, fs_perm_options_remove, &e);
         FS_EXPECT_NO_EC(e);
@@ -1857,8 +1856,8 @@ TEST(fs_permissions_opt, remove_on_file)
 
 TEST(fs_permissions_opt, remove_on_directory)
 {
-        const fs_path path = "./j";
-        fs_error_code e;
+        const fs_path_t path = "./j";
+        fs_error_code_t e;
 
         fs_permissions_opt(path, _fs_perms_All_write, fs_perm_options_remove, &e);
         FS_EXPECT_NO_EC(e);
@@ -1870,8 +1869,8 @@ TEST(fs_permissions_opt, remove_on_directory)
 
 TEST(fs_permissions_opt, remove_on_symlink)
 {
-        const fs_path path = "./k";
-        fs_error_code e;
+        const fs_path_t path = "./k";
+        fs_error_code_t e;
 
         fs_permissions_opt(path, _fs_perms_All_write, fs_perm_options_remove, &e);
         FS_EXPECT_NO_EC(e);
@@ -1884,8 +1883,8 @@ TEST(fs_permissions_opt, remove_on_symlink)
 #ifdef _WIN32 // fchmodat does not support AT_SYMLINK_NOFOLLOW (yet)
 TEST(fs_permissions_opt, remove_with_nofollow_on_symlink)
 {
-        const fs_path path = "./k";
-        fs_error_code e;
+        const fs_path_t path = "./k";
+        fs_error_code_t e;
 
         constexpr auto opts = fs_perm_options_remove | fs_perm_options_nofollow;
         fs_permissions_opt(path, _fs_perms_All_write, opts, &e);
@@ -1899,16 +1898,16 @@ TEST(fs_permissions_opt, remove_with_nofollow_on_symlink)
 
 TEST(fs_read_symlink, on_symlink)
 {
-        const fs_path path     = "./k";
-        const fs_path expected = "./j";
-        fs_error_code e;
+        const fs_path_t path     = "./k";
+        const fs_path_t expected = "./j";
+        fs_error_code_t e;
 
-        const fs_cpath res = fs_read_symlink(path, &e);
+        const fs_cpath_t res = fs_read_symlink(path, &e);
         FS_EXPECT_NO_EC(e);
 
-        const fs_cpath can1 = fs_canonical(res, &e);
+        const fs_cpath_t can1 = fs_canonical(res, &e);
         FS_EXPECT_NO_EC(e);
-        const fs_cpath can2 = fs_canonical(expected, &e);
+        const fs_cpath_t can2 = fs_canonical(expected, &e);
         FS_EXPECT_NO_EC(e);
 
         EXPECT_EQ(fs_path(can1), fs_path(can2));
@@ -1916,8 +1915,8 @@ TEST(fs_read_symlink, on_symlink)
 
 TEST(fs_read_symlink, on_file)
 {
-        const fs_path path = "./j/file6.txt";
-        fs_error_code e;
+        const fs_path_t path = "./j/file6.txt";
+        fs_error_code_t e;
 
         fs_read_symlink(path, &e);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
@@ -1925,8 +1924,8 @@ TEST(fs_read_symlink, on_file)
 
 TEST(fs_read_symlink, on_directory)
 {
-        const fs_path path = "./j";
-        fs_error_code e;
+        const fs_path_t path = "./j";
+        fs_error_code_t e;
 
         fs_read_symlink(path, &e);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
@@ -1934,8 +1933,8 @@ TEST(fs_read_symlink, on_directory)
 
 TEST(fs_remove, on_file)
 {
-        const fs_path path = "./playground/fs_remove_on_file";
-        fs_error_code e;
+        const fs_path_t path = "./playground/fs_remove_on_file";
+        fs_error_code_t e;
 
         path.create_file() << "";
         EXPECT_TRUE(fs_exists(path, &e));
@@ -1949,8 +1948,8 @@ TEST(fs_remove, on_file)
 
 TEST(fs_remove, on_empty_directory)
 {
-        const fs_path path = "./playground/fs_remove_on_empty_directory";
-        fs_error_code e;
+        const fs_path_t path = "./playground/fs_remove_on_empty_directory";
+        fs_error_code_t e;
 
         fs_create_directory(path, &e);
         FS_EXPECT_NO_EC(e);
@@ -1964,9 +1963,9 @@ TEST(fs_remove, on_empty_directory)
 
 TEST(fs_remove, on_non_empty_directory)
 {
-        const fs_path path = "./playground/dir";
-        const fs_path tmp  = "./playground/fs_remove_on_empty_directory";
-        fs_error_code e;
+        const fs_path_t path = "./playground/dir";
+        const fs_path_t tmp  = "./playground/fs_remove_on_empty_directory";
+        fs_error_code_t e;
 
         fs_copy_opt(path, tmp, fs_copy_options_recursive, &e);
         FS_EXPECT_NO_EC(e);
@@ -1984,9 +1983,9 @@ TEST(fs_remove, on_non_empty_directory)
 
 TEST(fs_remove, on_symlink)
 {
-        const fs_path tmp  = "./playground/fs_remove_on_symlink1";
-        const fs_path path = "./playground/fs_remove_on_symlink2";
-        fs_error_code e;
+        const fs_path_t tmp  = "./playground/fs_remove_on_symlink1";
+        const fs_path_t path = "./playground/fs_remove_on_symlink2";
+        fs_error_code_t e;
 
         tmp.create_file() << "";
 
@@ -2006,8 +2005,8 @@ TEST(fs_remove, on_symlink)
 
 TEST(fs_remove_all, on_file)
 {
-        const fs_path path = "./playground/fs_remove_all_on_file";
-        fs_error_code e;
+        const fs_path_t path = "./playground/fs_remove_all_on_file";
+        fs_error_code_t e;
 
         path.create_file() << "";
         EXPECT_TRUE(fs_exists(path, &e));
@@ -2020,8 +2019,8 @@ TEST(fs_remove_all, on_file)
 
 TEST(fs_remove_all, on_empty_directory)
 {
-        const fs_path path = "./playground/fs_remove_all_on_directory";
-        fs_error_code e;
+        const fs_path_t path = "./playground/fs_remove_all_on_directory";
+        fs_error_code_t e;
 
         fs_create_directory(path, &e);
         FS_EXPECT_NO_EC(e);
@@ -2034,9 +2033,9 @@ TEST(fs_remove_all, on_empty_directory)
 
 TEST(fs_remove_all, on_non_empty_directory)
 {
-        const fs_path path = "./playground/dir";
-        const fs_path tmp  = "./playground/fs_remove_all_on_empty_directory";
-        fs_error_code e;
+        const fs_path_t path = "./playground/dir";
+        const fs_path_t tmp  = "./playground/fs_remove_all_on_empty_directory";
+        fs_error_code_t e;
 
         fs_copy_opt(path, tmp, fs_copy_options_recursive, &e);
         FS_EXPECT_NO_EC(e);
@@ -2049,9 +2048,9 @@ TEST(fs_remove_all, on_non_empty_directory)
 
 TEST(fs_remove_all, on_symlink)
 {
-        const fs_path tmp  = "./playground/fs_remove_all_on_symlink1";
-        const fs_path path = "./playground/fs_remove_all_on_symlink2";
-        fs_error_code e;
+        const fs_path_t tmp  = "./playground/fs_remove_all_on_symlink1";
+        const fs_path_t path = "./playground/fs_remove_all_on_symlink2";
+        fs_error_code_t e;
 
         tmp.create_file() << "";
 
@@ -2070,9 +2069,9 @@ TEST(fs_remove_all, on_symlink)
 
 TEST(fs_rename, on_file)
 {
-        const fs_path from = "./playground/fs_rename_on_file1";
-        const fs_path to = "./playground/fs_rename_on_file2";
-        fs_error_code e;
+        const fs_path_t from = "./playground/fs_rename_on_file1";
+        const fs_path_t to = "./playground/fs_rename_on_file2";
+        fs_error_code_t e;
 
         from.create_file() << "";
 
@@ -2089,9 +2088,9 @@ TEST(fs_rename, on_file)
 
 TEST(fs_rename, on_empty_directory)
 {
-        const fs_path from = "./playground/fs_rename_on_empty_directory1";
-        const fs_path to = "./playground/fs_rename_on_empty_directory2";
-        fs_error_code e;
+        const fs_path_t from = "./playground/fs_rename_on_empty_directory1";
+        const fs_path_t to = "./playground/fs_rename_on_empty_directory2";
+        fs_error_code_t e;
 
         fs_create_directory(from, &e);
         FS_EXPECT_NO_EC(e);
@@ -2109,10 +2108,10 @@ TEST(fs_rename, on_empty_directory)
 
 TEST(fs_rename, on_non_empty_directory)
 {
-        const fs_path src  = "./playground/dir";
-        const fs_path from = "./playground/fs_rename_on_non_empty_directory1";
-        const fs_path to   = "./playground/fs_rename_on_non_empty_directory2";
-        fs_error_code e;
+        const fs_path_t src  = "./playground/dir";
+        const fs_path_t from = "./playground/fs_rename_on_non_empty_directory1";
+        const fs_path_t to   = "./playground/fs_rename_on_non_empty_directory2";
+        fs_error_code_t e;
 
         fs_copy_opt(src, from, fs_copy_options_recursive, &e);
         FS_EXPECT_NO_EC(e);
@@ -2124,7 +2123,7 @@ TEST(fs_rename, on_non_empty_directory)
         EXPECT_FALSE(fs_exists(from, &e));
         FS_EXPECT_NO_EC(e);
 
-        const fs_cpath subdir = fs_path_append(to, PREF("dir"), &e);
+        const fs_cpath_t subdir = fs_path_append(to, PREF("dir"), &e);
         FS_EXPECT_NO_EC(e);
         EXPECT_TRUE(fs_exists(subdir, &e));
 
@@ -2134,10 +2133,10 @@ TEST(fs_rename, on_non_empty_directory)
 
 TEST(fs_rename, on_symlink)
 {
-        const fs_path tmp  = "./playground/fs_rename_on_symlink1";
-        const fs_path from = "./playground/fs_rename_on_symlink2";
-        const fs_path to   = "./playground/fs_rename_on_symlink3";
-        fs_error_code e;
+        const fs_path_t tmp  = "./playground/fs_rename_on_symlink1";
+        const fs_path_t from = "./playground/fs_rename_on_symlink2";
+        const fs_path_t to   = "./playground/fs_rename_on_symlink3";
+        fs_error_code_t e;
 
         tmp.create_file() << "";
         fs_create_symlink(tmp, from, &e);
@@ -2158,8 +2157,8 @@ TEST(fs_rename, on_symlink)
 
 TEST(fs_resize_file, on_file)
 {
-        const fs_path path = "./playground/dir/file";
-        fs_error_code e;
+        const fs_path_t path = "./playground/dir/file";
+        fs_error_code_t e;
 
         fs_resize_file(path, 100000, &e);
         FS_EXPECT_NO_EC(e);
@@ -2171,8 +2170,8 @@ TEST(fs_resize_file, on_file)
 
 TEST(fs_resize_file, on_directory)
 {
-        const fs_path path = "./playground/dir";
-        fs_error_code e;
+        const fs_path_t path = "./playground/dir";
+        fs_error_code_t e;
 
         fs_resize_file(path, 100000, &e);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
@@ -2180,8 +2179,8 @@ TEST(fs_resize_file, on_directory)
 
 TEST(fs_resize_file, on_symlink_to_file)
 {
-        const fs_path path = "./symfile";
-        fs_error_code e;
+        const fs_path_t path = "./symfile";
+        fs_error_code_t e;
 
         fs_resize_file(path, 100000, &e);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
@@ -2189,61 +2188,61 @@ TEST(fs_resize_file, on_symlink_to_file)
 
 TEST(fs_space, on_directory)
 {
-        const fs_path path = "./j";
+        const fs_path_t path = "./j";
         EXPECT_THAT(fs::space(path), gtutils::matches(fs_space(path, nullptr)));
 }
 
 TEST(fs_space, on_file)
 {
-        const fs_path path = "./j/file6.txt";
+        const fs_path_t path = "./j/file6.txt";
         EXPECT_THAT(fs::space(path), gtutils::matches(fs_space(path, nullptr)));
 }
 
 TEST(fs_status, on_file)
 {
-        const fs_path path = "./j/file6.txt";
+        const fs_path_t path = "./j/file6.txt";
         EXPECT_THAT(fs::status(path), gtutils::matches(fs_status(path, nullptr)));
 }
 
 TEST(fs_status, on_directory)
 {
-        const fs_path path = "./j";
+        const fs_path_t path = "./j";
         EXPECT_THAT(fs::status(path), gtutils::matches(fs_status(path, nullptr)));
 }
 
 TEST(fs_status, on_symlink_to_file)
 {
-        const fs_path path = "./filesym";
+        const fs_path_t path = "./filesym";
         EXPECT_THAT(fs::status(path), gtutils::matches(fs_status(path, nullptr)));
 }
 
 TEST(fs_status, on_symlink_to_dir)
 {
-        const fs_path path = "./k";
+        const fs_path_t path = "./k";
         EXPECT_THAT(fs::status(path), gtutils::matches(fs_status(path, nullptr)));
 }
 
 TEST(fs_status, on_non_existent)
 {
-        const fs_path path = "./nonexistent";
+        const fs_path_t path = "./nonexistent";
         EXPECT_THAT(fs::status(path), gtutils::matches(fs_status(path, nullptr)));
 }
 
 TEST(fs_symlink_status, on_file)
 {
-        const fs_path path = "./j/file6.txt";
+        const fs_path_t path = "./j/file6.txt";
         EXPECT_THAT(fs::symlink_status(path), gtutils::matches(fs_symlink_status(path, nullptr)));
 }
 
 TEST(fs_symlink_status, on_directory)
 {
-        const fs_path path = "./j";
+        const fs_path_t path = "./j";
         EXPECT_THAT(fs::symlink_status(path), gtutils::matches(fs_symlink_status(path, nullptr)));
 }
 
 TEST(fs_symlink_status, on_symlink_to_file)
 {
-        const fs_path path = "./filesym";
+        const fs_path_t path = "./filesym";
 #if STD_SYMLINK_SUPPORTED
         EXPECT_THAT(fs::symlink_status(path), gtutils::matches(fs_symlink_status(path, nullptr)));
 #else // STD_SYMLINK_SUPPORTED
@@ -2253,7 +2252,7 @@ TEST(fs_symlink_status, on_symlink_to_file)
 
 TEST(fs_symlink_status, on_symlink_to_dir)
 {
-        const fs_path path = "./k";
+        const fs_path_t path = "./k";
 #if STD_SYMLINK_SUPPORTED
         EXPECT_THAT(fs::symlink_status(path), gtutils::matches(fs_symlink_status(path, nullptr)));
 #else // STD_SYMLINK_SUPPORTED
@@ -2263,7 +2262,7 @@ TEST(fs_symlink_status, on_symlink_to_dir)
 
 TEST(fs_symlink_status, on_non_existent)
 {
-        const fs_path path = "./nonexistent";
+        const fs_path_t path = "./nonexistent";
 #if STD_SYMLINK_SUPPORTED
         EXPECT_THAT(fs::symlink_status(path), gtutils::matches(fs_symlink_status(path, nullptr)));
 #else // STD_SYMLINK_SUPPORTED
@@ -2273,8 +2272,8 @@ TEST(fs_symlink_status, on_non_existent)
 
 TEST(fs_temp_directory_path, directory_exists)
 {
-        fs_error_code e;
-        const fs_path path = fs_temp_directory_path(&e);
+        fs_error_code_t e;
+        const fs_path_t path = fs_temp_directory_path(&e);
         FS_EXPECT_NO_EC(e);
 
         EXPECT_TRUE(fs_exists(path, &e));
@@ -2286,14 +2285,14 @@ TEST(fs_temp_directory_path, directory_exists)
 
 TEST(fs_path_iter, absolute_path_from_start)
 {
-        const fs_path path = WIN_ONLY("C:") "/a/../b/./../p/a/c/file.txt";
-        fs_error_code e;
+        const fs_path_t path = WIN_ONLY("C:") "/a/../b/./../p/a/c/file.txt";
+        fs_error_code_t e;
 
         fs_path_iter it = fs_path_begin(path, &e);
         FS_EXPECT_NO_EC(e);
 
         for (const auto &stdelem : path) {
-                fs_cpath elem = FS_DEREF_PATH_ITER(it);
+                fs_cpath_t elem = FS_DEREF_PATH_ITER(it);
                 EXPECT_EQ(fs_path(elem), fs_path(stdelem));
 
                 fs_path_iter_next(&it);
@@ -2303,14 +2302,14 @@ TEST(fs_path_iter, absolute_path_from_start)
 
 TEST(fs_path_iter, absolute_path_from_end)
 {
-        const fs_path path = WIN_ONLY("C:") "/a/../b/./../p/a/c/file.txt";
+        const fs_path_t path = WIN_ONLY("C:") "/a/../b/./../p/a/c/file.txt";
 
         fs_path_iter it          = fs_path_end(path);
         fs_path::iterator stdit = path.end();
 
         while (path.begin() != stdit) {
                 fs_path_iter_prev(&it);
-                fs_cpath elem = FS_DEREF_PATH_ITER(it);
+                fs_cpath_t elem = FS_DEREF_PATH_ITER(it);
 
                 EXPECT_EQ(fs_path(elem), *--stdit);
         }
@@ -2320,14 +2319,14 @@ TEST(fs_path_iter, absolute_path_from_end)
 #ifdef _WIN32
 TEST(fs_path_iter, absolute_path_without_root_dir_from_start)
 {
-        const fs_path path = "C:a/../b/./../p/a/c/file.txt";
-        fs_error_code e;
+        const fs_path_t path = "C:a/../b/./../p/a/c/file.txt";
+        fs_error_code_t e;
 
         fs_path_iter it = fs_path_begin(path, &e);
         FS_EXPECT_NO_EC(e);
 
         for (const auto &stdelem : path) {
-                fs_cpath elem = FS_DEREF_PATH_ITER(it);
+                fs_cpath_t elem = FS_DEREF_PATH_ITER(it);
                 EXPECT_EQ(fs_path(elem), fs_path(stdelem));
 
                 fs_path_iter_next(&it);
@@ -2337,14 +2336,14 @@ TEST(fs_path_iter, absolute_path_without_root_dir_from_start)
 
 TEST(fs_path_iter, absolute_path_without_root_dir_from_end)
 {
-        const fs_path path = "C:a/../b/./../p/a/c/file.txt";
+        const fs_path_t path = "C:a/../b/./../p/a/c/file.txt";
 
         fs_path_iter it          = fs_path_end(path);
         fs_path::iterator stdit = path.end();
 
         while (path.begin() != stdit) {
                 fs_path_iter_prev(&it);
-                fs_cpath elem = FS_DEREF_PATH_ITER(it);
+                fs_cpath_t elem = FS_DEREF_PATH_ITER(it);
 
                 EXPECT_EQ(fs_path(elem), *--stdit);
         }
@@ -2354,14 +2353,14 @@ TEST(fs_path_iter, absolute_path_without_root_dir_from_end)
 
 TEST(fs_path_iter, relative_path_from_start)
 {
-        const fs_path path = "a/../b/./../p/a/c/file.txt";
-        fs_error_code e;
+        const fs_path_t path = "a/../b/./../p/a/c/file.txt";
+        fs_error_code_t e;
 
         fs_path_iter it = fs_path_begin(path, &e);
         FS_EXPECT_NO_EC(e);
 
         for (const auto &stdelem : path) {
-                fs_cpath elem = FS_DEREF_PATH_ITER(it);
+                fs_cpath_t elem = FS_DEREF_PATH_ITER(it);
                 EXPECT_EQ(fs_path(elem), fs_path(stdelem));
 
                 fs_path_iter_next(&it);
@@ -2371,13 +2370,13 @@ TEST(fs_path_iter, relative_path_from_start)
 
 TEST(fs_path_iter, relative_path_from_end)
 {
-        const fs_path path      = "a/../b/./../p/a/c/file.txt";
+        const fs_path_t path      = "a/../b/./../p/a/c/file.txt";
         fs_path_iter it          = fs_path_end(path);
         fs_path::iterator stdit = path.end();
 
         while (path.begin() != stdit) {
                 fs_path_iter_prev(&it);
-                fs_cpath elem = FS_DEREF_PATH_ITER(it);
+                fs_cpath_t elem = FS_DEREF_PATH_ITER(it);
 
                 EXPECT_EQ(fs_path(elem), *--stdit);
         }
@@ -2386,9 +2385,9 @@ TEST(fs_path_iter, relative_path_from_end)
 
 TEST(fs_directory_iterator, contains_all_entries_in_directory)
 {
-        const fs_path path = "./a";
+        const fs_path_t path = "./a";
 
-        fs_error_code e;
+        fs_error_code_t e;
         fs_dir_iter it = fs_directory_iterator(path, &e);
         FS_EXPECT_NO_EC(e);
 
@@ -2402,8 +2401,8 @@ TEST(fs_directory_iterator, contains_all_entries_in_directory)
                 | vws::transform([](auto const &entry) { return entry.path(); }
         );
 
-        rng::sort(paths, {}, [](const fs_path &p) { return p.generic_string(); };
-        rng::sort(stdpaths, {}, [](const fs_path &p) { return p.generic_string(); };
+        rng::sort(paths, {}, [](const fs_path_t &p) { return p.generic_string(); };
+        rng::sort(stdpaths, {}, [](const fs_path_t &p) { return p.generic_string(); };
         EXPECT_EQ(paths, stdpaths);
 }
 
@@ -2411,9 +2410,9 @@ TEST(fs_directory_iterator, contains_all_entries_in_directory)
 
 TEST(fs_recursive_directory_iterator, contains_all_entries_recursively_in_directory)
 {
-        const fs_path path = "./a";
+        const fs_path_t path = "./a";
 
-        fs_error_code e;
+        fs_error_code_t e;
         fs_dir_iter it = fs_recursive_directory_iterator(path, &e);
         FS_EXPECT_NO_EC(e);
 
@@ -2427,16 +2426,16 @@ TEST(fs_recursive_directory_iterator, contains_all_entries_recursively_in_direct
                 | vws::transform([](auto const &entry) { return entry.path(); }
         );
 
-        rng::sort(paths, {}, [](const fs_path &p) { return p.generic_string(); };
-        rng::sort(stdpaths, {}, [](const fs_path &p) { return p.generic_string(); };
+        rng::sort(paths, {}, [](const fs_path_t &p) { return p.generic_string(); };
+        rng::sort(stdpaths, {}, [](const fs_path_t &p) { return p.generic_string(); };
         EXPECT_EQ(paths, stdpaths);
 }
 
 TEST(fs_recursive_directory_iterator, contains_all_entries_recursively_in_directory_with_follow_symlinks)
 {
-        const fs_path path = "./a";
+        const fs_path_t path = "./a";
 
-        fs_error_code e;
+        fs_error_code_t e;
         fs_dir_iter it = fs_recursive_directory_iterator_opt(path, fs_directory_options_follow_directory_symlink, &e);
         FS_EXPECT_NO_EC(e);
 
@@ -2450,8 +2449,8 @@ TEST(fs_recursive_directory_iterator, contains_all_entries_recursively_in_direct
                 | vws::transform([](auto const &entry) { return entry.path(); }
         );
 
-        rng::sort(paths, {}, [](const fs_path &p) { return p.generic_string(); };
-        rng::sort(stdpaths, {}, [](const fs_path &p) { return p.generic_string(); };
+        rng::sort(paths, {}, [](const fs_path_t &p) { return p.generic_string(); };
+        rng::sort(stdpaths, {}, [](const fs_path_t &p) { return p.generic_string(); };
         EXPECT_EQ(paths, stdpaths);
 }
 

@@ -39,9 +39,9 @@ typedef struct _tests {
         int (**tests)(void);
         int count;
 
-} _tests;
+} _tests_t;
 
-_tests *__tests   = NULL;
+_tests_t *__tests = NULL;
 int __tests_count = 0;
 
 extern int RUN_ALL_TESTS(void);
@@ -157,7 +157,7 @@ extern int RUN_ALL_TESTS(void)
         start = clock();
 
         for (i = 0; i < __tests_count; ++i) {
-                const _tests *t = &__tests[i];
+                const _tests_t *t = &__tests[i];
 
                 int     j;
                 clock_t tstart;
@@ -194,7 +194,7 @@ extern void _add_test(const char *name, int (*cb)(void)) {
         int i;
 
         for (i = 0; i < __tests_count; ++i) {
-                _tests *t = &__tests[i];
+                _tests_t *t = &__tests[i];
                 if (strcmp(t->name, name) != 0)
                         continue;
 
@@ -204,7 +204,7 @@ extern void _add_test(const char *name, int (*cb)(void)) {
                 return;
         }
 
-        __tests = realloc(__tests, (__tests_count + 1) * sizeof(_tests));
+        __tests = realloc(__tests, (__tests_count + 1) * sizeof(_tests_t));
 
         __tests[__tests_count].name  = name;
         __tests[__tests_count].tests = malloc(sizeof(int (*)(void)));
