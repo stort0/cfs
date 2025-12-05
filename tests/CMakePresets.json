@@ -20,7 +20,26 @@
       }
     },
     {
-      "name": "gcc",
+      "name": "win-only",
+      "hidden": true,
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "not-win",
+      "hidden": true,
+      "condition": {
+        "type": "notEquals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+
+    {
+      "name": "gcc-base",
       "hidden": true,
       "inherits": "common",
       "generator": "Ninja",
@@ -29,39 +48,34 @@
         "CMAKE_C_FLAGS": "-Wall -Wextra -Wpedantic -Werror"
       },
       "vendor": {
-        "jetbrains.com/clion": {
-          "toolchain": "MinGW"
-        },
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
           "intelliSenseMode": "linux-gcc-x64"
         }
       }
     },
     {
-      "name": "msvc",
+      "name": "gcc",
       "hidden": true,
-      "inherits": "common",
-      "generator": "Visual Studio 17 2022",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "cl",
-        "CMAKE_C_FLAGS": "/W4 /Wall /WX"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      },
+      "inherits": ["gcc-base", "not-win"],
       "vendor": {
         "jetbrains.com/clion": {
-          "toolchain": "Visual Studio"
-        },
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-msvc-x64"
+          "toolchain": "GCC"
         }
       }
     },
     {
-      "name": "clang-sanitize",
+      "name": "mingw-gcc",
+      "hidden": true,
+      "inherits": "gcc-base",
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "MinGW GCC"
+        }
+      }
+    },
+
+    {
+      "name": "clang-sanitize-base",
       "hidden": true,
       "inherits": "common",
       "generator": "Ninja",
@@ -80,6 +94,46 @@
       }
     },
     {
+      "name": "clang-sanitize",
+      "hidden": true,
+      "inherits": ["clang-sanitize-base", "not-win"],
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "Clang"
+        }
+      }
+    },
+    {
+      "name": "mingw-clang-sanitize",
+      "hidden": true,
+      "inherits": "clang-sanitize-base",
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "MinGW Clang"
+        }
+      }
+    },
+
+    {
+      "name": "msvc",
+      "hidden": true,
+      "inherits": ["common", "win-only"],
+      "generator": "Visual Studio 17 2022",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_C_FLAGS": "/W4 /Wall /WX"
+      },
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "Visual Studio"
+        },
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-msvc-x64"
+        }
+      }
+    },
+
+    {
       "name": "gcc-release",
       "displayName": "GCC Release",
       "inherits": "gcc",
@@ -95,6 +149,50 @@
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
+
+    {
+      "name": "mingw-gcc-release",
+      "displayName": "GCC Release",
+      "inherits": "mingw-gcc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "mingw-gcc-debug",
+      "displayName": "GCC Debug",
+      "inherits": "mingw-gcc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+
+    {
+      "name": "clang-debug-sanitize",
+      "displayName": "Clang Sanitize",
+      "inherits": "clang-sanitize",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "mingwclang-debug-sanitize",
+      "displayName": "Clang Sanitize",
+      "inherits": "mingw-clang-sanitize",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+
+    {
+      "name": "mingw-clang-debug-sanitize",
+      "displayName": "Clang Sanitize",
+      "inherits": "mingw-clang-sanitize",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+
     {
       "name": "msvc-release",
       "displayName": "MSVC Release",
@@ -107,14 +205,6 @@
       "name": "msvc-debug",
       "displayName": "MSVC Debug",
       "inherits": "msvc",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
-      "name": "clang-debug-sanitize",
-      "displayName": "Clang Sanitize",
-      "inherits": "clang-sanitize",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
@@ -133,6 +223,34 @@
       "configuration": "Debug",
       "configurePreset": "gcc-debug"
     },
+
+    {
+      "name": "mingw-gcc-release-build",
+      "displayName": "GCC Release",
+      "configuration": "Release",
+      "configurePreset": "mingw-gcc-release"
+    },
+    {
+      "name": "mingw-gcc-debug-build",
+      "displayName": "GCC Debug",
+      "configuration": "Debug",
+      "configurePreset": "mingw-gcc-debug"
+    },
+
+    {
+      "name": "clang-sanitize-build",
+      "displayName": "Clang Sanitize",
+      "configuration": "Debug",
+      "configurePreset": "clang-debug-sanitize"
+    },
+
+    {
+      "name": "mingw-clang-sanitize-build",
+      "displayName": "Clang Sanitize",
+      "configuration": "Debug",
+      "configurePreset": "mingw-clang-debug-sanitize"
+    },
+
     {
       "name": "msvc-release-build",
       "displayName": "MSVC Release",
@@ -144,12 +262,6 @@
       "displayName": "MSVC Debug",
       "configuration": "Debug",
       "configurePreset": "msvc-debug"
-    },
-    {
-      "name": "clang-sanitize-build",
-      "displayName": "Clang Sanitize",
-      "configuration": "Debug",
-      "configurePreset": "clang-debug-sanitize"
     }
   ]
 }
