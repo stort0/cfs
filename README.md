@@ -31,7 +31,10 @@ A single header implementation of `std::filesystem`/`Boost.Filesystem` in `C89`.
 
 | Windows           | Linux |
 |:------------------|:------|
-| Windows **2000+** | Any   |
+| Windows **95+**\* | Any   |
+
+\* Only compatibility with **Windows 2000+** are tested in a VM. Older Windows
+versions are checked by modifying the `_WIN32_WINNT` value.
 
 Some specific fixes are implemented for `FreeBSD` and `Darwin` but compatibility
 won't be tested.

@@ -526,6 +526,9 @@ static fs_error_code_t _fs_internal_error = {0};
 #if _FS_WINNT >= 0x0500
 #include <shlobj.h>
 #define _FS_SH_CREATE_DIRECTORY_AVAILABLE
+#define _FS_GET_FILE_SIZE_EX_AVAILABLE
+#define _FS_GET_VOLUME_PATH_NAME_AVAILABLE
+#define _FS_CREATE_HARD_LINK_AVAILABLE
 #endif
 
 #if _FS_WINNT >= 0x0600
@@ -683,7 +686,7 @@ typedef struct _fs_generic_reparse_buffer       _fs_generic_reparse_buffer_t;
         LPWSTR unc;                                                                                     \
                                                                                                         \
         ret = __foo__ __get_args__(__path__);                                                           \
-        err    = GetLastError();                                                                        \
+        err = GetLastError();                                                                           \
         if (ret != __err__ || !_FS_IS_ERROR_EXCEED(err))                                                \
                 return ret;                                                                             \
                                                                                                         \
@@ -707,7 +710,7 @@ typedef struct _fs_generic_reparse_buffer       _fs_generic_reparse_buffer_t;
         LPWSTR unc2;                                                                                    \
                                                                                                         \
         ret = __foo__ __get_args__(__path1__, __path2__);                                               \
-        err    = GetLastError();                                                                        \
+        err = GetLastError();                                                                           \
         if (ret != __err__ || !_FS_IS_ERROR_EXCEED(err))                                                \
                 return ret;                                                                             \
                                                                                                         \
@@ -870,11 +873,13 @@ typedef struct _fs_generic_reparse_buffer       _fs_generic_reparse_buffer_t;
 #define _FS_SECURE_GETENV_AVAILABLE
 #endif
 
-#if _FS_GLIBC(2, 21)
+#if _FS_GLIBC(2, 1)
 #define _FS_LINUX_SENDFILE_AVAILABLE
 #include <sys/sendfile.h>
 #endif
 #endif /* __linux__ */
+
+#define _FS_CREATE_HARD_LINK_AVAILABLE
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -994,13 +999,13 @@ fs_bool_t fs_is_##__what__(fs_cpath_t p, fs_error_code_t *ec)                   
 #define _FS_IS_ERROR_SET(ec)          ((ec)->type != fs_error_type_none)
 #define _FS_IS_SYSTEM_ERROR(ec)       ((ec)->type == fs_error_type_system)
 
-typedef fs_char_t       *_fs_char_it_t;
-typedef const fs_char_t *_fs_char_cit_t;
-
 #define _has_root_name(p, rtnend)         ((p) != (rtnend))
 #define _has_root_dir(rtnend, rtdend)     ((rtnend) != (rtdend))
 #define _has_relative_path(relative, end) ((relative) != (end))
 #define _has_filename(file, end)          ((file) != (end))
+
+typedef fs_char_t       *_fs_char_it_t;
+typedef const fs_char_t *_fs_char_cit_t;
 
 static const char *_fs_error_string(const fs_error_type_t type, const int e)
 {
@@ -1535,9 +1540,11 @@ static int _fs_win32_sh_create_directory_ex_w(const HWND window, const LPCWSTR n
 }
 #endif
 
+#ifdef _FS_CREATE_HARD_LINK_AVAILABLE
 #define _FS_WIN32_COPY_HARD_LINK_MAKE_ARGS(__path1__, __path2__) (__path1__, __path2__, sa)
 static BOOL _fs_win32_create_hard_link(const LPCWSTR link, const LPCWSTR target, const LPSECURITY_ATTRIBUTES sa)
 _FS_WIN32_API_CALL_FOO_BODY2(BOOL, CreateHardLinkW, _FS_WIN32_COPY_HARD_LINK_MAKE_ARGS, FALSE, link, target)
+#endif
 
 static DWORD _fs_win32_get_current_directory(const DWORD len, const LPWSTR buf)
 {
@@ -1555,7 +1562,17 @@ static BOOL _fs_win32_get_file_information_by_handle(HANDLE handle, LPBY_HANDLE_
 
 static BOOL _fs_win32_get_file_size_ex(HANDLE handle, PLARGE_INTEGER size)
 {
+#ifdef _FS_GET_FILE_SIZE_EX_AVAILABLE
         return GetFileSizeEx(handle, size);
+#else /* !_FS_GET_FILE_SIZE_EX_AVAILABLE */
+        DWORD high;
+        DWORD low = GetFileSize(handle, &high);
+        if (low == INVALID_FILE_SIZE)
+                return FALSE;
+        size->HighPart = high;
+        size->LowPart  = low;
+        return TRUE;
+#endif /* !_FS_GET_FILE_SIZE_EX_AVAILABLE */
 }
 
 static BOOL _fs_win32_get_file_time(HANDLE handle, LPFILETIME creation, LPFILETIME access, LPFILETIME write)
@@ -1597,9 +1614,15 @@ static BOOL _fs_win32_set_end_of_file(HANDLE handle)
 }
 #endif /* !_FS_FILE_END_OF_FILE_AVAILABLE */
 
+#ifdef _FS_GET_VOLUME_PATH_NAME_AVAILABLE
 #define _FS_WIN32_GET_VOLUME_PATH_NAME_MAKE_ARGS(__path__) (__path__, buf, len)
 static BOOL _fs_win32_get_volume_path_name(LPCWSTR name, LPWSTR buf, DWORD len)
 _FS_WIN32_API_CALL_FOO_BODY(BOOL, GetVolumePathNameW, _FS_WIN32_GET_VOLUME_PATH_NAME_MAKE_ARGS, FALSE, name, FS_FALSE)
+#else
+#define _FS_WIN32_GET_VOLUME_INFORMATION_MAKE_ARGS(__path__) (__path__, buf, size, serial, complen, flags, fsname, fsnamesize)
+static BOOL _fs_win32_get_volume_information(LPCWSTR name, LPWSTR buf, DWORD size, LPDWORD serial, LPDWORD complen, LPDWORD flags, LPWSTR fsname, DWORD fsnamesize)
+_FS_WIN32_API_CALL_FOO_BODY(BOOL, GetVolumeInformationW, _FS_WIN32_GET_VOLUME_INFORMATION_MAKE_ARGS, FALSE, name, FS_FALSE)
+#endif
 
 #define _FS_WIN32_GET_DISK_FREE_SPACE_EX_MAKE_ARGS(__path__) (__path__, available, total, tfree)
 static BOOL _fs_win32_get_disk_free_space_ex(LPCWSTR name, PULARGE_INTEGER available, PULARGE_INTEGER total, PULARGE_INTEGER tfree)
@@ -1697,7 +1720,9 @@ static fs_path_t _fs_win32_get_final_path(fs_cpath_t p, _fs_path_kind_t *pkind, 
                 _fs_file_flags_Backup_semantics, ec);
         if (_FS_IS_ERROR_SET(ec))
                 return NULL;
-#endif /* _FS_WINDOWS_VISTA */
+#else /* !_FS_WINDOWS_VISTA */
+        (void)pkind;
+#endif /* !_FS_WINDOWS_VISTA */
 
         len = MAX_PATH;
         buf = malloc(len * sizeof(WCHAR));
@@ -1780,7 +1805,9 @@ defer:
                 _fs_win32_close_handle(handle);
                 return;
         }
-#endif /* _FS_SYMLINKS_SUPPORTED */
+#else /* !_FS_SYMLINKS_SUPPORTED */
+        (void)follow;
+#endif /* !_FS_SYMLINKS_SUPPORTED */
 
         if ((oldattrs & _fs_file_attr_Readonly) == rdtest)
                 return;
@@ -3476,6 +3503,7 @@ extern void fs_create_hard_link(const fs_cpath_t target, const fs_cpath_t link, 
 {
         _FS_CLEAR_ERROR_CODE(ec);
 
+#ifdef _FS_CREATE_HARD_LINK_AVAILABLE
 #ifndef NDEBUG
         if (!target || !link) {
                 _FS_CFS_ERROR(ec, fs_cfs_error_invalid_argument);
@@ -3501,6 +3529,11 @@ extern void fs_create_hard_link(const fs_cpath_t target, const fs_cpath_t link, 
         if (_fs_posix_link(target, link))
                 _FS_SYSTEM_ERROR(ec, errno);
 #endif
+#else /* !_FS_CREATE_HARD_LINK_AVAILABLE */
+        (void)target;
+        (void)link;
+        _FS_CFS_ERROR(ec, fs_cfs_error_function_not_supported);
+#endif /* !_FS_CREATE_HARD_LINK_AVAILABLE */
 }
 
 extern void fs_create_symlink(const fs_cpath_t target, const fs_cpath_t link, fs_error_code_t *ec)
@@ -4222,6 +4255,8 @@ extern void fs_resize_file(const fs_cpath_t p, const fs_umax_t size, fs_error_co
         HANDLE                handle;
 #ifdef _FS_FILE_END_OF_FILE_AVAILABLE
         FILE_END_OF_FILE_INFO info;
+#else
+        LARGE_INTEGER off = {0};
 #endif
 #endif
 
@@ -4263,23 +4298,25 @@ extern void fs_resize_file(const fs_cpath_t p, const fs_umax_t size, fs_error_co
         if (!_fs_win32_set_file_information_by_handle(handle, FileEndOfFileInfo, &info, sizeof(FILE_END_OF_FILE_INFO)))
                 _FS_SYSTEM_ERROR(ec, GetLastError());
 #else /* !_FS_FILE_END_OF_FILE_AVAILABLE */
-        const LARGE_INTEGER off = { .QuadPart = (LONGLONG)size };
+        off.QuadPart = (LONGLONG)size;
         if (fs_file_size(p, ec) > size) {
                 if (!_fs_win32_set_file_pointer_ex(handle, off, NULL, FILE_BEGIN)) {
                         _FS_SYSTEM_ERROR(ec, GetLastError());
                         goto defer;
                 }
         } else {
+                const BYTE zero   = 0;
+                LARGE_INTEGER end = {0};
+
                 if (_FS_IS_ERROR_SET(ec))
                         goto defer;
 
-                const LARGE_INTEGER end = { .QuadPart = (LONGLONG)size - 1 };
+                end.QuadPart = (LONGLONG)size - 1;
                 if (_fs_win32_set_file_pointer_ex(handle, end, NULL, FILE_BEGIN) == 0) {
                         _FS_SYSTEM_ERROR(ec, GetLastError());
                         goto defer;
                 }
 
-                const BYTE zero = 0;
                 if (!_fs_win32_write_file(handle, &zero, 1, NULL, NULL)) {
                         _FS_SYSTEM_ERROR(ec, GetLastError());
                         goto defer;
@@ -4334,10 +4371,17 @@ extern fs_space_info_t fs_space(const fs_cpath_t p, fs_error_code_t *ec)
         }
 
 #ifdef _WIN32
+#ifdef _FS_GET_VOLUME_PATH_NAME_AVAILABLE
         if (!_fs_win32_get_volume_path_name(p, buf, MAX_PATH)) {
                 _FS_SYSTEM_ERROR(ec, GetLastError());
                 return ret;
         }
+#else
+        if (!_fs_win32_get_volume_information(p, buf, MAX_PATH, NULL, NULL, NULL, NULL, 0)) {
+                _FS_SYSTEM_ERROR(ec, GetLastError());
+                return ret;
+        }
+#endif
 
         /* Get free space information */
         if (!_fs_win32_get_disk_free_space_ex(buf, &available, &capacity, &free)) {

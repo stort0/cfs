@@ -1,3 +1,5 @@
+#!/usr/bin/bash
+
 start=0
 end=0
 passed=0
