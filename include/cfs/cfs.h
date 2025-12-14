@@ -925,12 +925,6 @@ typedef enum _fs_open_flags {
 
 #endif /* !_WIN32 */
 
-#ifdef _MSC_VER
-#define _FS_FORCE_INLINE __forceinline
-#elif defined(__GNUC__)
-#define _FS_FORCE_INLINE __attribute__((always_inline)) inline
-#endif
-
 #define _FS_CLEAR_ERROR_CODE(__ec__)                            \
 do {                                                            \
         __ec__ = (__ec__) ? (__ec__) : &_fs_internal_error;     \
