@@ -15,13 +15,13 @@ A single header implementation of `std::filesystem`/`Boost.Filesystem` in `C89`.
 // This should be done in a source file, not a header file.
 
 // For Linux:
-// #define _GNU_SOURCE (recommended, not required in C++). This
-//  should be defined as a compiler definition, not using a #define.
+// #define _GNU_SOURCE (recommended, required for some functions, not required in C++).
+//  This should be defined as a compiler definition, not using a #define.
 //  If defined in a .c file, it should be above all #includes.
 
 // For Windows:
 //  Be sure to use a toolchain that automatically defines _WIN32_WINNT
-//  to enable symlinks.
+//  to enable symlinks. _WIN32_WINNT is required to use symlinks
 
 #define CFS_IMPLEMENTATION
 #include <cfs/cfs.h>

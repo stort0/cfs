@@ -72,7 +72,7 @@ TEST(fs_absolute, existent_path)
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
         EXPECT_TRUE(fs_equivalent(result, path, NULL));
 
-        expected = _FS_DUP(TEST_ROOT FS_MAKE_PATH("/a/b/c/d/file1.txt"));
+        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/a/b/c/d/file1.txt"), NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -93,7 +93,7 @@ TEST(fs_absolute, nonexistent_path)
 
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
 
-        expected = _FS_DUP(TEST_ROOT FS_MAKE_PATH("/a/nonexistent/c/d"));
+        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/a/nonexistent/c/d"), NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -115,7 +115,7 @@ TEST(fs_absolute, long_path)
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
         EXPECT_TRUE(fs_equivalent(result, path, NULL));
 
-        expected = _FS_DUP(TEST_ROOT FS_MAKE_PATH("/") EXISTENT_LONG_PATH);
+        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/") EXISTENT_LONG_PATH, NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -136,7 +136,7 @@ TEST(fs_absolute, nonexistent_long_path)
 
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
 
-        expected = _FS_DUP(TEST_ROOT FS_MAKE_PATH("/") NONEXISTENT_LONG_PATH);
+        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/") NONEXISTENT_LONG_PATH, NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -185,7 +185,7 @@ TEST(fs_canonical, existent_path)
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
         EXPECT_TRUE(fs_equivalent(path, result, NULL));
 
-        expected = _FS_DUP(TEST_ROOT FS_MAKE_PATH("/a/b/e"));
+        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/a/b/e"), NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -207,7 +207,7 @@ TEST(fs_canonical, existent_symlink_path)
         result = fs_canonical(path, &e);
         FS_EXPECT_NO_EC(e);
 
-        expected = _FS_DUP(TEST_ROOT FS_MAKE_PATH("/j/file6.txt"));
+        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/j/file6.txt"), NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -293,7 +293,7 @@ TEST(fs_weakly_canonical, nonexistent_path)
 
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
 
-        expected = _FS_DUP(TEST_ROOT FS_MAKE_PATH("/a/nonexistent"));
+        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/a/nonexistent"), NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -317,7 +317,7 @@ TEST(fs_weakly_canonical, nonexistent_symlink_path)
 
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
 
-        expected = _FS_DUP(TEST_ROOT FS_MAKE_PATH("/a/nonexistent"));
+        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/a/nonexistent"), NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -1462,117 +1462,137 @@ TEST(fs_create_directory_symlink, empty_link)
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_invalid_argument);
 }
 
-/*
 TEST(fs_current_path, is_correct)
 {
         fs_error_code_t e;
+        fs_path_t       cur;
 
-        const fs_cpath_t cur = fs_current_path(&e);
+        cur = fs_current_path(&e);
         FS_EXPECT_NO_EC(e);
 
-        const fs_path_t stdcur = fs::current_path();
-        EXPECT_TRUE(fs_equivalent(cur, stdcur, &e));
+        EXPECT_TRUE(fs_equivalent(cur, TEST_ROOT, NULL));
+
+        free(cur);
 }
 
 TEST(fs_set_current_path, changes_cwd_correctly)
 {
-        const fs_path_t path = "./a";
-        fs_error_code_t e;
+        const fs_path_t path = FS_MAKE_PATH("./a");
 
-        const fs_cpath_t orig = fs_current_path(&e);
+        fs_error_code_t e;
+        fs_path_t       orig;
+        fs_path_t       cur;
+        fs_path_t       test;
+
+        orig = fs_current_path(&e);
         FS_EXPECT_NO_EC(e);
 
         fs_set_current_path(path, &e);
         FS_EXPECT_NO_EC(e);
 
-        const fs_cpath_t cur = fs_current_path(&e);
+        cur = fs_current_path(&e);
         FS_EXPECT_NO_EC(e);
-        const fs_path_t test = fs_path_append(orig, path, &e);
+        test = fs_path_append(orig, path, &e);
         FS_EXPECT_NO_EC(e);
 
-        EXPECT_TRUE(fs_equivalent(cur, test, &e));
+        EXPECT_TRUE(fs_equivalent(cur, test, NULL));
 
-        fs_set_current_path(orig, &e);
-        FS_EXPECT_NO_EC(e);
+        fs_set_current_path(orig, NULL);
+
+        free(orig);
+        free(test);
+        free(cur);
 }
 
 TEST(fs_exists, on_file)
 {
-        const fs_path_t path = "./j/file6.txt";
-        EXPECT_TRUE(fs_exists(path, nullptr));
+        const fs_path_t path = FS_MAKE_PATH("./j/file6.txt");
+        EXPECT_TRUE(fs_exists(path, NULL));
 }
 
 TEST(fs_exists, on_directory)
 {
-        const fs_path_t path = "./a";
-        EXPECT_TRUE(fs_exists(path, nullptr));
+        const fs_path_t path = FS_MAKE_PATH("./a");
+        EXPECT_TRUE(fs_exists(path, NULL));
 }
 
 TEST(fs_exists, on_symlink)
 {
-        const fs_path_t path = "./k";
-        EXPECT_TRUE(fs_exists(path, nullptr));
+        const fs_path_t path = FS_MAKE_PATH("./k");
+
+        if (!enable_symlink_tests)
+                SKIP_TEST();
+
+        EXPECT_TRUE(fs_exists(path, NULL));
 }
 
 TEST(fs_exists, through_symlink)
 {
-        const fs_path_t path = "./k/file6.txt";
-        EXPECT_TRUE(fs_exists(path, nullptr));
+        const fs_path_t path = FS_MAKE_PATH("./k/file6.txt");
+
+        if (!enable_symlink_tests)
+                SKIP_TEST();
+
+        EXPECT_TRUE(fs_exists(path, NULL));
 }
 
 TEST(fs_equivalent, on_file)
 {
-        const fs_path_t p1 = "./j/file6.txt";
-        const fs_path_t p2 = "./j/file6.txt";
-        EXPECT_TRUE(fs_equivalent(p1, p2, nullptr));
+        const fs_path_t p1 = FS_MAKE_PATH("./j/file6.txt");
+        const fs_path_t p2 = FS_MAKE_PATH("./j/file6.txt");
+        EXPECT_TRUE(fs_equivalent(p1, p2, NULL));
 }
 
 TEST(fs_equivalent, on_directory)
 {
-        const fs_path_t p1 = "./j";
-        const fs_path_t p2 = "./j";
-        EXPECT_TRUE(fs_equivalent(p1, p2, nullptr));
+        const fs_path_t p1 = FS_MAKE_PATH("./j");
+        const fs_path_t p2 = FS_MAKE_PATH("./j");
+        EXPECT_TRUE(fs_equivalent(p1, p2, NULL));
 }
 
 TEST(fs_equivalent, on_symlink)
 {
-        const fs_path_t p1 = "./k";
-        const fs_path_t p2 = "./k";
-        EXPECT_TRUE(fs_equivalent(p1, p2, nullptr));
+        const fs_path_t p1 = FS_MAKE_PATH("./k");
+        const fs_path_t p2 = FS_MAKE_PATH("./k");
+
+        if (!enable_symlink_tests)
+                SKIP_TEST();
+
+        EXPECT_TRUE(fs_equivalent(p1, p2, NULL));
 }
 
-TEST(fs_equivalent, though_symlink)
+TEST(fs_equivalent, through_symlink)
 {
-        const fs_path_t p1 = "./j/file6.txt";
-        const fs_path_t p2 = "./k/file6.txt";
-        EXPECT_TRUE(fs_equivalent(p1, p2, nullptr));
+        const fs_path_t p1 = FS_MAKE_PATH("./j/file6.txt");
+        const fs_path_t p2 = FS_MAKE_PATH("./k/file6.txt");
+
+        if (!enable_symlink_tests)
+                SKIP_TEST();
+
+        EXPECT_TRUE(fs_equivalent(p1, p2, NULL));
 }
 
 TEST(fs_file_size, on_empty_file)
 {
-        const fs_path_t path = "./j/file6.txt";
-        fs_error_code_t e;
+        const fs_path_t path = FS_MAKE_PATH("./j/file6.txt");
 
-        path.create_file() << "";
-        EXPECT_EQ(fs_file_size(path, &e), 0);
+        _write_file(path, "");
+        EXPECT_EQ(fs_file_size(path, NULL), 0);
 }
 
 TEST(fs_file_size, on_non_empty_file)
 {
-        const fs_path_t path = "./j/file6.txt";
-        fs_error_code_t e;
+        const fs_path_t path = FS_MAKE_PATH("./j/file6.txt");
 
-        path.create_file() << "text";
-        EXPECT_EQ(fs_file_size(path, &e), fs::file_size(path));
-        path.create_file() << "";
+        _write_file(path, "text");
+        EXPECT_EQ(fs_file_size(path, NULL), 4);
+        _write_file(path, "");
 }
 
 TEST(fs_file_size, on_directory)
 {
-        const fs_path_t path = "./j";
+        const fs_path_t path = FS_MAKE_PATH("./j");
         fs_error_code_t e;
-
-        path.create_file() << "text";
 
         fs_file_size(path, &e);
         FS_EXPECT_EC(e, fs_error_type_cfs, fs_cfs_error_is_a_directory);
@@ -1580,12 +1600,16 @@ TEST(fs_file_size, on_directory)
 
 TEST(fs_file_size, on_symlink_to_file)
 {
-        const fs_path_t path = "./filesym";
+        const fs_path_t path = FS_MAKE_PATH("./filesym");
         fs_error_code_t e;
+
+        if (!enable_symlink_tests)
+                SKIP_TEST();
 
         EXPECT_EQ(fs_file_size(path, &e), 0);
 }
 
+/*
 TEST(fs_hard_link_count, on_file_without_links)
 {
         const fs_path_t path = "./j/file6.txt";
@@ -2673,6 +2697,20 @@ int main(void)
         REGISTER_TEST(fs_create_directory_symlink, normal_path);
         REGISTER_TEST(fs_create_directory_symlink, empty_target);
         REGISTER_TEST(fs_create_directory_symlink, empty_link);
+        REGISTER_TEST(fs_current_path, is_correct);
+        REGISTER_TEST(fs_set_current_path, changes_cwd_correctly);
+        REGISTER_TEST(fs_exists, on_file);
+        REGISTER_TEST(fs_exists, on_directory);
+        REGISTER_TEST(fs_exists, on_symlink);
+        REGISTER_TEST(fs_exists, through_symlink);
+        REGISTER_TEST(fs_equivalent, on_file);
+        REGISTER_TEST(fs_equivalent, on_directory);
+        REGISTER_TEST(fs_equivalent, on_symlink);
+        REGISTER_TEST(fs_equivalent, through_symlink);
+        REGISTER_TEST(fs_file_size, on_empty_file);
+        REGISTER_TEST(fs_file_size, on_non_empty_file);
+        REGISTER_TEST(fs_file_size, on_directory);
+        REGISTER_TEST(fs_file_size, on_symlink_to_file);
 
         return RUN_ALL_TESTS();
 }
