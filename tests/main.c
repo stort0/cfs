@@ -72,7 +72,7 @@ TEST(fs_absolute, existent_path)
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
         EXPECT_TRUE(fs_equivalent(result, path, NULL));
 
-        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/a/b/c/d/file1.txt"), NULL);
+        expected = fs_path_dupe(TEST_ROOT FS_MAKE_PATH("/a/b/c/d/file1.txt"), NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -93,7 +93,7 @@ TEST(fs_absolute, nonexistent_path)
 
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
 
-        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/a/nonexistent/c/d"), NULL);
+        expected = fs_path_dupe(TEST_ROOT FS_MAKE_PATH("/a/nonexistent/c/d"), NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -115,7 +115,7 @@ TEST(fs_absolute, long_path)
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
         EXPECT_TRUE(fs_equivalent(result, path, NULL));
 
-        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/") EXISTENT_LONG_PATH, NULL);
+        expected = fs_path_dupe(TEST_ROOT FS_MAKE_PATH("/") EXISTENT_LONG_PATH, NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -136,7 +136,7 @@ TEST(fs_absolute, nonexistent_long_path)
 
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
 
-        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/") NONEXISTENT_LONG_PATH, NULL);
+        expected = fs_path_dupe(TEST_ROOT FS_MAKE_PATH("/") NONEXISTENT_LONG_PATH, NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -185,7 +185,7 @@ TEST(fs_canonical, existent_path)
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
         EXPECT_TRUE(fs_equivalent(path, result, NULL));
 
-        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/a/b/e"), NULL);
+        expected = fs_path_dupe(TEST_ROOT FS_MAKE_PATH("/a/b/e"), NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -207,7 +207,7 @@ TEST(fs_canonical, existent_symlink_path)
         result = fs_canonical(path, &e);
         FS_EXPECT_NO_EC(e);
 
-        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/j/file6.txt"), NULL);
+        expected = fs_path_dupe(TEST_ROOT FS_MAKE_PATH("/j/file6.txt"), NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -293,7 +293,7 @@ TEST(fs_weakly_canonical, nonexistent_path)
 
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
 
-        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/a/nonexistent"), NULL);
+        expected = fs_path_dupe(TEST_ROOT FS_MAKE_PATH("/a/nonexistent"), NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -317,7 +317,7 @@ TEST(fs_weakly_canonical, nonexistent_symlink_path)
 
         EXPECT_TRUE(fs_path_is_absolute(result, NULL));
 
-        expected = _fs_strdup(TEST_ROOT FS_MAKE_PATH("/a/nonexistent"), NULL);
+        expected = fs_path_dupe(TEST_ROOT FS_MAKE_PATH("/a/nonexistent"), NULL);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 

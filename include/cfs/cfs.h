@@ -388,6 +388,8 @@ extern fs_bool_t fs_is_symlink(fs_cpath_t p, fs_error_code_t *ec);
 
 extern fs_bool_t fs_status_known(fs_file_status_t s);
 
+extern fs_path_t fs_path_dupe(fs_cpath_t p, fs_error_code_t *ec);
+
 extern fs_path_t fs_path_append(fs_cpath_t p, fs_cpath_t other, fs_error_code_t *ec);
 
 extern void fs_path_append_s(fs_path_t *pp, fs_cpath_t other, fs_error_code_t *ec);
@@ -939,7 +941,7 @@ do {                                                            \
         (__ec__)->msg  = _fs_error_string(__type__, __e__);     \
 } while (FS_FALSE)
 
-#define _FS_CFS_ERROR(__ec__, __e__) _FS_SET_ERROR(fs_error_type_cfs, __ec__, __e__)
+#define _FS_CFS_ERROR(__ec__, __e__)    _FS_SET_ERROR(fs_error_type_cfs, __ec__, __e__)
 #define _FS_SYSTEM_ERROR(__ec__, __e__) _FS_SET_ERROR(fs_error_type_system, __ec__, __e__)
 
 #ifndef NDEBUG
@@ -4375,6 +4377,20 @@ extern fs_bool_t fs_is_symlink(const fs_cpath_t p, fs_error_code_t *ec)
 extern fs_bool_t fs_status_known(const fs_file_status_t s)
 {
         return _fs_status_known_t(s.type);
+}
+
+extern fs_path_t fs_path_dupe(const fs_cpath_t p, fs_error_code_t *ec)
+{
+#ifndef NDEBUG
+        if (!p) {
+                _FS_CFS_ERROR(ec, fs_cfs_error_invalid_argument);
+                return NULL;
+        }
+#else
+        (void)ec;
+#endif
+
+        return _fs_strdup(p, NULL);
 }
 
 extern fs_path_t fs_path_append(const fs_cpath_t p, const fs_cpath_t other, fs_error_code_t *ec)
