@@ -1178,7 +1178,7 @@ static fs_path_t _fs_strdup(const fs_cpath_t first, fs_cpath_t last)
         size = (len + 1) * sizeof(fs_char_t);
 
         out = malloc(size);
-        memcpy(out, first, size);
+        memcpy(out, first, len * sizeof(fs_char_t));
         out[len] = _FS_PREF('\0');
 
         return out;
@@ -2515,7 +2515,7 @@ extern fs_path_t fs_absolute(fs_cpath_t p, fs_error_code_t *ec)
                 const DWORD req = _fs_win32_get_full_path_name(p, len, buf, NULL);
                 if (req == 0) {
                         _FS_SYSTEM_ERROR(ec, GetLastError());
-                        return _fs_strdup(_FS_EMPTY, NULL);
+                        return _FS_ALLOC_EMPTY;
                 }
 
                 if (req > len) {
