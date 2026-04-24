@@ -15,13 +15,14 @@ A single header implementation of `std::filesystem`/`Boost.Filesystem` in `C89`.
 // This should be done in a source file, not a header file.
 
 // For Linux:
-// #define _GNU_SOURCE (recommended, required for some functions, not required in C++).
+// #define _GNU_SOURCE 
+//  Already defined by most compilers, required for some functions.
 //  This should be defined as a compiler definition, not using a #define.
 //  If defined in a .c file, it should be above all #includes.
 
 // For Windows:
 //  Be sure to use a toolchain that automatically defines _WIN32_WINNT
-//  to enable symlinks. _WIN32_WINNT is required to use symlinks
+//  to enable symlinks.
 
 #define CFS_IMPLEMENTATION
 #include <cfs/cfs.h>
@@ -47,8 +48,8 @@ or a **custom** one.
 
  - On `Windows`, paths above `MAX_PATH` *(260 chars)* length are supported.
  - Empty paths `""` are **not** transformed in `"."` and `NULL` paths are treated as 
-   an error in `Debug` (**fs_cfs_error_invalid_argument**) or **undefined behaviour** in
-   `Release` mode.
+   an error in `Debug` (**fs_cfs_error_invalid_argument**) or **undefined behavior**
+   in `Release` mode.
  - `fs_file_time_type` is based on the **UNIX** epoch on **all** OSs.
  - `fs_hard_link_count` always does **not** include the file itself as a link for
    consistency across operating systems.
