@@ -2520,13 +2520,13 @@ static void _print_test_env(void)
 {
 #ifdef _FS_64BIT
         const char *bits = "64";
-#else
+#else /* !_FS_64BIT */
         const char *bits = "32";
-#endif
+#endif /* !_FS_64BIT */
 
 #ifndef _WIN32
         struct utsname name = {0};
-#endif
+#endif /* !_WIN32 */
 
         printf("Running main() from %s\n", __FILE__);
 
@@ -2614,11 +2614,11 @@ int main(void)
                        "to run tests for symlinks.\n");
                 enable_symlink_tests = FS_FALSE;
         }
-#endif
+#endif /* _WIN32 && _FS_SYMLINKS_SUPPORTED */
 
 #ifdef FS_TEST_PRINT_ENV
         _print_test_env();
-#endif
+#endif /* FS_TEST_PRINT_ENV */
         _prepare_env();
 
         REGISTER_TEST(fs_absolute, existent_path);

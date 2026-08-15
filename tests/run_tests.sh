@@ -18,7 +18,7 @@ function run_linux_test {
     echo ""
   fi
 
-  docker build -f linux/Dockerfile .. --tag $vm --platform=$plat --build-arg BASE_IMAGE=$img
+  docker build -f linux/Dockerfile .. --tag "$vm" --platform="$plat" --build-arg BASE_IMAGE="$img"
   if test $? -ne 0; then
     echo "Errors in tests from: $vm. Could not build docker image."
     failed+=("$vm")
@@ -26,7 +26,7 @@ function run_linux_test {
   echo ""
 
   echo "Running tests from: $vm..."
-  docker run --rm -it $vm
+  docker run --rm -it "$vm"
   result=$?
   echo ""
 
@@ -39,7 +39,7 @@ function run_linux_test {
   fi
   echo ""
 
-  docker image rm $vm -f
+  docker image rm "$vm" -f
   echo ""
 }
 

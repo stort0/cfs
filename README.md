@@ -3,11 +3,8 @@
 
 # CFS: cross-platform filesystem API in C89
 
-A single header implementation of `std::filesystem`/`Boost.Filesystem` in `C89`.
-
-> ⚠️ Warning<br>
-> The library will not compile in a C++ environment (yet).<br>
-> Define **CFS_IMPLEMENTATION** in a **C** file instead.
+A single header implementation of a cross-platform filesystem API inspired by
+`std::filesystem`/`Boost.Filesystem` in `C89`.
 
 ### Usage:
 
