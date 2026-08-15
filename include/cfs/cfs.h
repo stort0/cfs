@@ -522,11 +522,11 @@ do {                                            \
 
 #ifdef CFS_IMPLEMENTATION
 
-#if defined(__cplusplus) || __STDC_VERSION__ >= 202311L
+#if defined(__cplusplus) || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L)
 #define _FS_EMPTY_INIT {}
-#else /* !__cplusplus && __STDC_VERSION__ < 202311L */
+#else /* !__cplusplus && (!__STDC_VERSION__ || __STDC_VERSION__ < 202311L) */
 #define _FS_EMPTY_INIT {0}
-#endif /* !__cplusplus && __STDC_VERSION__ < 202311L */
+#endif /* !__cplusplus && (!__STDC_VERSION__ || __STDC_VERSION__ < 202311L) */
 
 #include <stdlib.h>
 #include <string.h>
