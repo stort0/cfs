@@ -97,12 +97,13 @@ typedef enum fs_posix_errors {
 } fs_posix_errors_t;
 #endif /* !_WIN32 */
 
-#if defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__)                                                        \
-        || defined(__aarch64__) || defined(__LP64__) || (defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 8)
+#if defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__)        \
+        || defined(__aarch64__) || defined(__LP64__)                    \
+        || (defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 8)
 #define _FS_64BIT
-#else
+#else /* !_WIN64 && !__x86_64__ && !__ppc64__ && !__aarch64__ && !__LP64__ && (!__SIZEOF_POINTER__ || __SIZEOF_POINTER__ != 8) */
 #define _FS_32BIT
-#endif
+#endif /* !_WIN64 && !__x86_64__ && !__ppc64__ && !__aarch64__ && !__LP64__ && (!__SIZEOF_POINTER__ || __SIZEOF_POINTER__ != 8) */
 
 #ifdef __STDC_VERSION__
 #include <stdint.h>
@@ -128,6 +129,12 @@ typedef unsigned long fs_uint_t;
 #define FS_SIZE_MAX    ((fs_umax_t)(FS_UINTMAX_MAX >> 1))
 #endif /* !__STDC_VERSION__ */
 
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
+#define FS_OCTAL(__n__) 0b##__n__
+#else /* !__STDC_VERSION__ || __STDC_VERSION__ < 202311L */
+#define FS_OCTAL(__n__) 0##__n__
+#endif /* !__STDC_VERSION__ || __STDC_VERSION__ < 202311L */
+
 typedef fs_char_t       *fs_path_t;
 typedef const fs_char_t *fs_cpath_t;
 
@@ -149,32 +156,33 @@ typedef enum fs_file_type {
 } fs_file_type_t;
 
 typedef enum fs_perms {
-        fs_perms_none = 0000,
+        fs_perms_none        = FS_OCTAL(000),
 
-        fs_perms_owner_read  = 0400,
-        fs_perms_owner_write = 0200,
-        fs_perms_owner_exec  = 0100,
-        fs_perms_owner_all   = 0700,
+        fs_perms_owner_read  = FS_OCTAL(400),
+        fs_perms_owner_write = FS_OCTAL(200),
+        fs_perms_owner_exec  = FS_OCTAL(100),
+        fs_perms_owner_all   = FS_OCTAL(700),
 
-        fs_perms_group_read  = 040,
-        fs_perms_group_write = 020,
-        fs_perms_group_exec  = 010,
-        fs_perms_group_all   = 070,
+        fs_perms_group_read  = FS_OCTAL(040),
+        fs_perms_group_write = FS_OCTAL(020),
+        fs_perms_group_exec  = FS_OCTAL(010),
+        fs_perms_group_all   = FS_OCTAL(070),
 
-        fs_perms_other_read  = 04,
-        fs_perms_other_write = 02,
-        fs_perms_other_exec  = 01,
-        fs_perms_other_all   = 07,
+        fs_perms_other_read  = FS_OCTAL(004),
+        fs_perms_other_write = FS_OCTAL(002),
+        fs_perms_other_exec  = FS_OCTAL(001),
+        fs_perms_other_all   = FS_OCTAL(007),
 
-        fs_perms_all        = 0777,
-        fs_perms_set_uid    = 04000,
-        fs_perms_set_gid    = 02000,
-        fs_perms_sticky_bit = 01000,
-        fs_perms_mask       = 07777,
-        fs_perms_unknown    = 0xFFFF,
+        fs_perms_all         = FS_OCTAL(777),
 
-        _fs_perms_All_write = fs_perms_owner_write | fs_perms_group_write | fs_perms_other_write,
-        _fs_perms_Readonly  = fs_perms_all & ~_fs_perms_All_write
+        fs_perms_set_uid     = FS_OCTAL(4000),
+        fs_perms_set_gid     = FS_OCTAL(2000),
+        fs_perms_sticky_bit  = FS_OCTAL(1000),
+        fs_perms_mask        = FS_OCTAL(7777),
+        fs_perms_unknown     = 0xFFFF,
+
+        _fs_perms_All_write  = fs_perms_owner_write | fs_perms_group_write | fs_perms_other_write,
+        _fs_perms_Readonly   = fs_perms_all & ~_fs_perms_All_write
 
 } fs_perms_t;
 
