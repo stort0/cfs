@@ -277,7 +277,8 @@ typedef struct fs_path_iter {
 } fs_path_iter_t;
 
 typedef struct fs_dir_iter {
-        ptrdiff_t  pos;
+        int         count;
+        int         pos;
         fs_cpath_t *elems;
 
 } fs_dir_iter_t;
@@ -5519,6 +5520,7 @@ extern fs_dir_iter_t fs_directory_iterator_opt(const fs_cpath_t p, const fs_dire
         }
 
         elems[count] = NULL;
+        ret.count    = count;
         ret.pos      = 0;
         ret.elems    = elems;
         return ret;
@@ -5579,6 +5581,7 @@ extern fs_recursive_dir_iter_t fs_recursive_directory_iterator_opt(const fs_cpat
         }
 
         elems[count] = NULL;
+        ret.count    = count;
         ret.pos      = 0;
         ret.elems    = elems;
         return ret;
