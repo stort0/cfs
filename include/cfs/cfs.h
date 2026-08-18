@@ -505,13 +505,14 @@ do {                                    \
         (it).begin = NULL;              \
 } while (FS_FALSE)
 
-#define FS_DESTROY_DIR_ITER(__name__, __it__)   \
-do {                                            \
-        (__it__).pos = 0;                       \
-        FOR_EACH_ENTRY_IN_DIR(__name__, __it__) \
-                free((void *)__name__);         \
-        free((void *)(__it__).elems);           \
-        (__it__).elems = NULL;                  \
+#define FS_DESTROY_DIR_ITER(__it__)                             \
+do {                                                            \
+        fs_cpath_t ___tmp_name_98365639;                        \
+        (__it__).pos = 0;                                       \
+        FOR_EACH_ENTRY_IN_DIR(___tmp_name_98365639, __it__)     \
+                free((void *)___tmp_name_98365639);             \
+        free((void *)(__it__).elems);                           \
+        (__it__).elems = NULL;                                  \
 } while (FS_FALSE)
 
 #define FS_DESTROY_RDIR_ITER FS_DESTROY_DIR_ITER
@@ -2992,7 +2993,7 @@ extern void fs_copy_opt(const fs_cpath_t from, const fs_cpath_t to, fs_copy_opti
                                 if (_FS_IS_ERROR_SET(ec))
                                         break;
                         }
-                        FS_DESTROY_DIR_ITER(path, it);
+                        FS_DESTROY_DIR_ITER(it);
                 }
         }
 }
@@ -4001,7 +4002,7 @@ extern fs_umax_t fs_remove_all(const fs_cpath_t p, fs_error_code_t *ec)
                 if (_FS_IS_ERROR_SET(ec))
                         break;
         }
-        FS_DESTROY_DIR_ITER(path, it);
+        FS_DESTROY_DIR_ITER(it);
 
         if (!_FS_IS_ERROR_SET(ec))
                 count += fs_remove(p, ec);
@@ -4313,7 +4314,6 @@ extern fs_bool_t fs_is_empty(const fs_cpath_t p, fs_error_code_t *ec)
 {
         fs_file_type_t type;
         fs_bool_t      empty;
-        fs_cpath_t     tmp;
 
         _FS_CLEAR_ERROR_CODE(ec);
 
@@ -4336,7 +4336,7 @@ extern fs_bool_t fs_is_empty(const fs_cpath_t p, fs_error_code_t *ec)
         if (type == fs_file_type_directory) {
                 fs_dir_iter_t it = fs_directory_iterator(p, ec);
                 empty            = !FS_DEREF_DIR_ITER(it);
-                FS_DESTROY_DIR_ITER(tmp, it);
+                FS_DESTROY_DIR_ITER(it);
         } else {
                 empty = fs_file_size(p, ec) == 0;
         }
