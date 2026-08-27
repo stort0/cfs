@@ -11,6 +11,7 @@
  - [X] Fix mixed styling
  - [X] Add '\\\\?\\' if a path is > **MAX_PATH** on *Windows*
  - [X] System error enums (*Windows* and *Posix*)
+ - [ ] require wide string support on Windows (either C95 or compiler extension)
 
 # Version 1.0.0-alpha
 

@@ -19,6 +19,7 @@ typedef char     fs_bool_t;
 typedef wchar_t fs_char_t;
 #define FS_PREFERRED_SEPARATOR (L'\\')
 #define FS_PREFERRED_SEPARATOR_S (L"\\")
+#define FS_FMT_PATH "%ls"
 
 #define __FS_MAKE_PATH(__str__) L##__str__
 #define FS_MAKE_PATH(__str__) __FS_MAKE_PATH(__str__)
@@ -53,6 +54,7 @@ typedef enum fs_win_errors {
 typedef char fs_char_t;
 #define FS_PREFERRED_SEPARATOR '/'
 #define FS_PREFERRED_SEPARATOR_S "/"
+#define FS_FMT_PATH "%s"
 
 #define FS_MAKE_PATH(__str__) __str__
 
