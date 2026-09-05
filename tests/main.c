@@ -15,7 +15,14 @@ do {                                                                            
         }                                                                           \
         EXPECT_EQ(e.code, err);                                                     \
 } while (0)
-#define FS_EXPECT_NO_EC(e) FS_EXPECT_EC(e, fs_error_type_none, fs_cfs_error_success)
+
+#define FS_EXPECT_NO_EC(e) do {                                                         \
+        if ((e).type == fs_error_type_cfs && (e).code == fs_cfs_error_out_of_memory) {  \
+                fprintf(stderr, "Out of memory.");                                      \
+                abort();                                                                \
+        }                                                                               \
+        FS_EXPECT_EC(e, fs_error_type_none, fs_cfs_error_success);                      \
+} while (0)
 
 #ifdef _WIN32
 #define WIN_ONLY(x) x
@@ -37,9 +44,16 @@ static fs_bool_t enable_symlink_tests = FS_FALSE;
 
 static void _create_file(const fs_cpath_t path)
 {
-        char *tmp = fs_path_get(path);
-        FILE *f   = fopen(tmp, "w");
+        fs_error_code_t e;
+        FILE            *f;
 
+        char *tmp = fs_path_get(path, &e);
+        if (!tmp) {
+                fprintf(stderr, "Out of memory.");
+                abort();
+        }
+
+        f = fopen(tmp, "w");
         if (f)
                 fclose(f);
 
@@ -48,9 +62,16 @@ static void _create_file(const fs_cpath_t path)
 
 static void _write_file(const fs_cpath_t path, const char *text)
 {
-        char *tmp = fs_path_get(path);
-        FILE *f   = fopen(tmp, "w");
+        fs_error_code_t e;
+        FILE            *f;
 
+        char *tmp = fs_path_get(path, &e);
+        if (!tmp) {
+                fprintf(stderr, "Out of memory.");
+                abort();
+        }
+
+        f = fopen(tmp, "w");
         if (f) {
                 fwrite(text, sizeof(char), strlen(text), f);
                 fclose(f);
@@ -351,7 +372,8 @@ TEST(fs_relative, base_in_path)
         check = fs_path_append(base, result, NULL);
         EXPECT_TRUE(fs_equivalent(path, check, NULL));
 
-        expected = fs_make_path("c/d/file1.txt");
+        expected = fs_make_path("c/d/file1.txt", &e);
+        FS_EXPECT_NO_EC(e);
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -376,7 +398,9 @@ TEST(fs_relative, base_not_in_path)
         check = fs_path_append(base, result, NULL);
         EXPECT_TRUE(fs_equivalent(path, check, NULL));
 
-        expected = fs_make_path("../a/b/c/d/file1.txt");
+        expected = fs_make_path("../a/b/c/d/file1.txt", &e);
+        FS_EXPECT_NO_EC(e);
+
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -404,7 +428,9 @@ TEST(fs_relative, through_symlink)
         check = fs_path_append(base, result, NULL);
         EXPECT_TRUE(fs_equivalent(path, check, NULL));
 
-        expected = fs_make_path("../../j/file7.txt");
+        expected = fs_make_path("../../j/file7.txt", &e);
+        FS_EXPECT_NO_EC(e);
+
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -470,7 +496,9 @@ TEST(fs_proximate, base_in_path)
         check = fs_path_append(base, result, NULL);
         EXPECT_TRUE(fs_equivalent(path, check, NULL));
 
-        expected = fs_make_path("c/d/file1.txt");
+        expected = fs_make_path("c/d/file1.txt", &e);
+        FS_EXPECT_NO_EC(e);
+
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -495,7 +523,9 @@ TEST(fs_proximate, base_not_in_path)
         check = fs_path_append(base, result, NULL);
         EXPECT_TRUE(fs_equivalent(path, check, NULL));
 
-        expected = fs_make_path("../a/b/c/d/file1.txt");
+        expected = fs_make_path("../a/b/c/d/file1.txt", &e);
+        FS_EXPECT_NO_EC(e);
+
         fs_path_make_preferred(&expected, NULL);
         EXPECT_EQ_PATH(result, expected);
 
@@ -921,8 +951,8 @@ TEST(fs_copy_opt, overwrite_existing)
         check = fs_last_write_time(dst, &e);
         FS_EXPECT_NO_EC(e);
 
-        EXPECT_NE(check.seconds   + (time_t)check.nanoseconds,
-                  dsttime.seconds + (time_t)dsttime.nanoseconds);
+        EXPECT_NE(check.seconds, dsttime.seconds);
+        EXPECT_NE(check.nanoseconds / 1000, dsttime.nanoseconds / 1000);
 
         fs_remove(dst, NULL);
 }
@@ -955,8 +985,8 @@ TEST(fs_copy_opt, skip_existing_older)
         check = fs_last_write_time(dst, &e);
         FS_EXPECT_NO_EC(e);
 
-        EXPECT_EQ(check.seconds   + (time_t)check.nanoseconds,
-                  dsttime.seconds + (time_t)dsttime.nanoseconds);
+        EXPECT_EQ(check.seconds, dsttime.seconds);
+        EXPECT_EQ(check.nanoseconds / 1000, dsttime.nanoseconds / 1000);
 
         fs_remove(dst, NULL);
 }
@@ -993,8 +1023,8 @@ TEST(fs_copy_opt, update_existing_newer)
         check = fs_last_write_time(dst, &e);
         FS_EXPECT_NO_EC(e);
 
-        EXPECT_NE(check.seconds   + (time_t)check.nanoseconds,
-                  dsttime.seconds + (time_t)dsttime.nanoseconds);
+        EXPECT_NE(check.seconds, dsttime.seconds);
+        EXPECT_NE(check.nanoseconds / 1000, dsttime.nanoseconds / 1000);
 
         fs_remove(dst, NULL);
 }
@@ -1027,8 +1057,8 @@ TEST(fs_copy_opt, update_existing_older)
         check = fs_last_write_time(dst, &e);
         FS_EXPECT_NO_EC(e);
 
-        EXPECT_EQ(check.seconds   + (time_t)check.nanoseconds,
-                  dsttime.seconds + (time_t)dsttime.nanoseconds);
+        EXPECT_EQ(check.seconds, dsttime.seconds);
+        EXPECT_EQ(check.nanoseconds / 1000, dsttime.nanoseconds / 1000);
 
         fs_remove(dst, NULL);
 }
@@ -1540,6 +1570,7 @@ TEST(fs_equivalent, on_file)
 {
         const fs_path_t p1 = FS_MAKE_PATH("./j/file6.txt");
         const fs_path_t p2 = FS_MAKE_PATH("./j/file6.txt");
+
         EXPECT_TRUE(fs_equivalent(p1, p2, NULL));
 }
 
@@ -1547,6 +1578,7 @@ TEST(fs_equivalent, on_directory)
 {
         const fs_path_t p1 = FS_MAKE_PATH("./j");
         const fs_path_t p2 = FS_MAKE_PATH("./j");
+
         EXPECT_TRUE(fs_equivalent(p1, p2, NULL));
 }
 
@@ -1592,6 +1624,7 @@ TEST(fs_file_size, on_non_empty_file)
 TEST(fs_file_size, on_directory)
 {
         const fs_path_t path = FS_MAKE_PATH("./j");
+
         fs_error_code_t e;
 
         fs_file_size(path, &e);
@@ -1601,6 +1634,7 @@ TEST(fs_file_size, on_directory)
 TEST(fs_file_size, on_symlink_to_file)
 {
         const fs_path_t path = FS_MAKE_PATH("./filesym");
+
         fs_error_code_t e;
 
         if (!enable_symlink_tests)
@@ -1609,25 +1643,26 @@ TEST(fs_file_size, on_symlink_to_file)
         EXPECT_EQ(fs_file_size(path, &e), 0);
 }
 
-/*
 TEST(fs_hard_link_count, on_file_without_links)
 {
-        const fs_path_t path = "./j/file6.txt";
+        const fs_path_t path = FS_MAKE_PATH("./j/file6.txt");
+
         fs_error_code_t e;
 
-        EXPECT_EQ(fs_hard_link_count(path, &e), 0);
+        EXPECT_EQ(fs_hard_link_count(path, &e), 1);
 }
 
 TEST(fs_hard_link_count, on_file_with_links)
 {
-        const fs_path_t path = "./j/file6.txt";
-        const fs_path_t tmp  = "./playground/fs_hard_link_count_on_file_with_links.txt";
+        const fs_path_t path = FS_MAKE_PATH("./j/file6.txt");
+        const fs_path_t tmp  = FS_MAKE_PATH("./playground/fs_hard_link_count_on_file_with_links.txt");
+
         fs_error_code_t e;
 
         fs_create_hard_link(path, tmp, &e);
         FS_EXPECT_NO_EC(e);
 
-        EXPECT_EQ(fs_hard_link_count(path, &e), 1);
+        EXPECT_EQ(fs_hard_link_count(path, &e), 2);
 
         fs_remove(tmp, &e);
         FS_EXPECT_NO_EC(e);
@@ -1635,7 +1670,8 @@ TEST(fs_hard_link_count, on_file_with_links)
 
 TEST(fs_hard_link_count, on_directory)
 {
-        const fs_path_t path = "./j";
+        const fs_path_t path = FS_MAKE_PATH("./j");
+
         fs_error_code_t e;
 
         fs_hard_link_count(path, &e);
@@ -1644,32 +1680,58 @@ TEST(fs_hard_link_count, on_directory)
 
 TEST(fs_last_write_time, on_file)
 {
-        const fs_path_t path = "./j/file6.txt";
-        EXPECT_THAT(fs::last_write_time(path), gtutils::matches(fs_last_write_time(path, nullptr)));
+        const fs_path_t path           = FS_MAKE_PATH("./j/file6.txt");
+        const fs_file_time_type_t time = { 946681200, 0 };
+
+        fs_error_code_t     e;
+        fs_file_time_type_t check;
+
+        fs_set_last_write_time(path, time, &e);
+        FS_EXPECT_NO_EC(e);
+
+        check = fs_last_write_time(path, &e);
+        FS_EXPECT_NO_EC(e);
+
+        EXPECT_EQ(time.seconds, check.seconds);
+        EXPECT_EQ(time.nanoseconds / 1000, check.nanoseconds / 1000);
 }
 
 TEST(fs_last_write_time, on_directory)
 {
-        const fs_path_t path = "./a";
-        EXPECT_THAT(fs::last_write_time(path), gtutils::matches(fs_last_write_time(path, nullptr)));
+        const fs_path_t path           = FS_MAKE_PATH("./a");
+        const fs_file_time_type_t time = { 946681200, 0 };
+
+        fs_error_code_t     e;
+        fs_file_time_type_t check;
+
+        fs_set_last_write_time(path, time, &e);
+        FS_EXPECT_NO_EC(e);
+
+        check = fs_last_write_time(path, &e);
+        FS_EXPECT_NO_EC(e);
+
+        EXPECT_EQ(time.seconds, check.seconds);
+        EXPECT_EQ(time.nanoseconds / 1000, check.nanoseconds / 1000);
 }
 
 TEST(fs_set_last_write_time, on_file)
 {
-        const fs_path_t path = "./j/file6.txt";
-        fs_error_code_t e;
+        const fs_path_t path = FS_MAKE_PATH("./j/file6.txt");
 
-        const fs_file_time_type og = fs_last_write_time(path, &e);
+        fs_error_code_t     e;
+        fs_file_time_type_t og;
+        fs_file_time_type_t newt;
+        fs_file_time_type_t check;
+
+        og = fs_last_write_time(path, &e);
         FS_EXPECT_NO_EC(e);
 
-        const fs_file_time_type newt = {
-                .seconds     = og.seconds + 3600,
-                .nanoseconds = og.nanoseconds
-        };
+        newt.seconds     = og.seconds + 3600;
+        newt.nanoseconds = og.nanoseconds;
         fs_set_last_write_time(path, newt, &e);
         FS_EXPECT_NO_EC(e);
 
-        const fs_file_time_type check = fs_last_write_time(path, &e);
+        check = fs_last_write_time(path, &e);
         FS_EXPECT_NO_EC(e);
 
         EXPECT_EQ(newt.seconds, check.seconds);
@@ -1681,20 +1743,22 @@ TEST(fs_set_last_write_time, on_file)
 
 TEST(fs_set_last_write_time, on_directory)
 {
-        const fs_path_t path = "./j";
-        fs_error_code_t e;
+        const fs_path_t path = FS_MAKE_PATH("./j");
 
-        const fs_file_time_type og = fs_last_write_time(path, &e);
+        fs_error_code_t     e;
+        fs_file_time_type_t og;
+        fs_file_time_type_t newt;
+        fs_file_time_type_t check;
+
+        og = fs_last_write_time(path, &e);
         FS_EXPECT_NO_EC(e);
 
-        const fs_file_time_type newt = {
-                .seconds     = og.seconds + 3600,
-                .nanoseconds = og.nanoseconds
-        };
+        newt.seconds     = og.seconds + 3600;
+        newt.nanoseconds = og.nanoseconds;
         fs_set_last_write_time(path, newt, &e);
         FS_EXPECT_NO_EC(e);
 
-        const fs_file_time_type check = fs_last_write_time(path, &e);
+        check = fs_last_write_time(path, &e);
         FS_EXPECT_NO_EC(e);
 
         EXPECT_EQ(newt.seconds, check.seconds);
@@ -1706,46 +1770,62 @@ TEST(fs_set_last_write_time, on_directory)
 
 TEST(fs_permissions, on_file)
 {
-        const fs_path_t path = "./j/file6.txt";
-        fs_error_code_t e;
+        const fs_path_t path   = FS_MAKE_PATH("./j/file6.txt");
+        const fs_perms_t perms = fs_perms_all & ~_fs_perms_All_write;
 
-        constexpr auto perms = fs_perms_all & ~_fs_perms_All_write;
+        fs_error_code_t e;
+        fs_perms_t      check;
+
         fs_permissions(path, perms, &e);
         FS_EXPECT_NO_EC(e);
 
-        EXPECT_EQ(fs_status(path, &e).perms, perms);
+        check = fs_status(path, &e).perms;
+        FS_EXPECT_NO_EC(e);
+        EXPECT_EQ(check, perms);
+
         fs_permissions(path, fs_perms_all, &e);
         FS_EXPECT_NO_EC(e);
 }
 
 TEST(fs_permissions, on_directory)
 {
-        const fs_path_t path = "./j";
-        fs_error_code_t e;
+        const fs_path_t path   = FS_MAKE_PATH("./j");
+        const fs_perms_t perms = fs_perms_all & ~_fs_perms_All_write;
 
-        constexpr auto perms = fs_perms_all & ~_fs_perms_All_write;
+        fs_error_code_t e;
+        fs_perms_t      check;
+
         fs_permissions(path, perms, &e);
         FS_EXPECT_NO_EC(e);
 
-        EXPECT_EQ(fs_status(path, &e).perms, perms);
+        check = fs_status(path, &e).perms;
+        FS_EXPECT_NO_EC(e);
+        EXPECT_EQ(check, perms);
+
         fs_permissions(path, fs_perms_all, &e);
         FS_EXPECT_NO_EC(e);
 }
 
 TEST(fs_permissions, on_symlink)
 {
-        const fs_path_t path = "./j";
-        fs_error_code_t e;
+        const fs_path_t path   = FS_MAKE_PATH("./j");
+        const fs_perms_t perms = fs_perms_all & ~_fs_perms_All_write;
 
-        constexpr auto perms = fs_perms_all & ~_fs_perms_All_write;
+        fs_error_code_t e;
+        fs_perms_t      check;
+
         fs_permissions(path, perms, &e);
         FS_EXPECT_NO_EC(e);
 
-        EXPECT_EQ(fs_status(path, &e).perms, perms);
+        check = fs_status(path, &e).perms;
+        FS_EXPECT_NO_EC(e);
+        EXPECT_EQ(check, perms);
+
         fs_permissions(path, fs_perms_all, &e);
         FS_EXPECT_NO_EC(e);
 }
 
+/*
 TEST(fs_permissions_opt, replace_on_file)
 {
         const fs_path_t path = "./j/file6.txt";
@@ -2711,6 +2791,16 @@ int main(void)
         REGISTER_TEST(fs_file_size, on_non_empty_file);
         REGISTER_TEST(fs_file_size, on_directory);
         REGISTER_TEST(fs_file_size, on_symlink_to_file);
+        REGISTER_TEST(fs_hard_link_count, on_file_without_links);
+        REGISTER_TEST(fs_hard_link_count, on_file_with_links);
+        REGISTER_TEST(fs_hard_link_count, on_directory);
+        REGISTER_TEST(fs_last_write_time, on_file);
+        REGISTER_TEST(fs_last_write_time, on_directory);
+        REGISTER_TEST(fs_set_last_write_time, on_file);
+        REGISTER_TEST(fs_set_last_write_time, on_directory);
+        REGISTER_TEST(fs_permissions, on_file);
+        REGISTER_TEST(fs_permissions, on_directory);
+        REGISTER_TEST(fs_permissions, on_symlink);
 
         return RUN_ALL_TESTS();
 }

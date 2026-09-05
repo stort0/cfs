@@ -1,15 +1,23 @@
+# Version 1.0.0
+
+ - [ ] File API (write, read, create)
+ - [ ] Make fs_path_t a struct to avoid implicit conversions on posix with fs_path_t = "..."
+ - [ ] Use more specific includes instead of `Windows.h`
+ - [ ] `likely()` and `unlikely()` macros for `if`s if available
+ - [ ] Lazy directory and recursive directory iterators
+ - [ ] Proper 64 bit file handling (_FILE_OFFSET_BITS, \*64 functions)
+
 # Version 1.0.0-beta
 
  - [ ] Optimize functions avoiding multiple equal parsing calls
  - [X] Tests
  - [X] Rewrite in **C90** / **ANSI C**
- - [ ] Verify allocations
+ - [X] Verify allocations
  - [X] Check parameters
  - [X] Verify minimum OS version off all API calls used (*Windows*, *Linux*, *macOS*, *BSD*)
  - [X] Make sure every call that returns path handles resizes (with for (;;) or similar)
- - [ ] Don't precompute all directory iterators members
  - [X] Fix mixed styling
- - [X] Add '\\\\?\\' if a path is > **MAX_PATH** on *Windows*
+ - [X] Add '\\\\?\\' if a path is > `MAX_PATH` on *Windows*
  - [X] System error enums (*Windows* and *Posix*)
  - [ ] require wide string support on Windows (either C95 or compiler extension)
 
