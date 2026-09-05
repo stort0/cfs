@@ -19,7 +19,8 @@
  - [X] Fix mixed styling
  - [X] Add '\\\\?\\' if a path is > `MAX_PATH` on *Windows*
  - [X] System error enums (*Windows* and *Posix*)
- - [ ] require wide string support on Windows (either C95 or compiler extension)
+ - [ ] require wide string support on *Windows* (either C95 or compiler extension)
+ - [ ] All functions with loop reallocations, check if `<size_type>_MAX / 2 > size`, error with `fs_cfs_error_name_too_long`
 
 # Version 1.0.0-alpha
 
