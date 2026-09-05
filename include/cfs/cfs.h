@@ -707,7 +707,11 @@ typedef struct _fs_stat {
 typedef enum _fs_symbolic_link_flags {
         _fs_symbolic_link_flag_none                      = 0x0,
         _fs_symbolic_link_flag_directory                 = SYMBOLIC_LINK_FLAG_DIRECTORY,
+#ifdef SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
         _fs_symbolic_link_flag_allow_unprivileged_create = SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
+#else
+        _fs_symbolic_link_flag_allow_unprivileged_create = 0x0
+#endif
 
 } _fs_symbolic_link_flag_t;
 
@@ -1692,36 +1696,44 @@ _FS_WIN32_API_CALL_FOO_BODY(BOOL, GetDiskFreeSpaceExW, _FS_WIN32_GET_DISK_FREE_S
 #ifdef _FS_SYMLINKS_SUPPORTED
 static BOOLEAN _fs_win32_create_symbolic_link(const LPCWSTR link, const LPCWSTR target, const DWORD flags, fs_error_code_t *const ec)
 {
-        fs_path_t abs;
         BOOLEAN   ret;
         DWORD     err;
         LPWSTR    unc1;
-        LPWSTR    unc2;
+        fs_path_t t;
+        size_t    len;
 
-        abs = fs_absolute(target, ec);
-        if (_FS_IS_ERROR_SET(ec))
+        len = wcslen(target);
+        t   = _fs_strdup(target, target + len, ec);
+        if (!t)
                 return FALSE;
 
-        ret = CreateSymbolicLinkW(link, abs, flags);
-        err = GetLastError();
+        _fs_win32_make_preferred(t, len);
 
-        free(abs);
-        if (ret || !_FS_IS_ERROR_EXCEED(err))
-                return ret;
+        ret = CreateSymbolicLinkW(link, t, flags);
+        err = GetLastError();
+        if (ret)
+                goto defer;
+
+#ifdef SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
+        if (_FS_ANY_FLAG_SET(flags, _fs_symbolic_link_flag_allow_unprivileged_create)
+            && err == fs_win_error_invalid_parameter) {
+                free(t);
+                return _fs_win32_create_symbolic_link(link, target, flags & ~_fs_symbolic_link_flag_allow_unprivileged_create, ec);
+        }
+#endif /* SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE */
+
+        if (!_FS_IS_ERROR_EXCEED(err))
+                goto defer;
 
         unc1 = _fs_win32_prepend_unc(link, FS_FALSE, ec);
         if (!unc1)
-                return ret;
+                goto defer;
 
-        unc2 = _fs_win32_prepend_unc(target, FS_FALSE, ec);
-        if (!unc2) {
-                free(unc1);
-                return ret;
-        }
-
-        ret = CreateSymbolicLinkW(unc1, unc2, flags);
+        ret = CreateSymbolicLinkW(unc1, t, flags);
         free(unc1);
-        free(unc2);
+
+defer:
+        free(t);
         return ret;
 }
 #endif /* _FS_SYMLINKS_SUPPORTED */
@@ -1867,15 +1879,15 @@ static fs_path_t _fs_win32_read_symlink(const fs_cpath_t p, fs_error_code_t *con
         const HANDLE hFile = _fs_win32_get_handle(
                 p, _fs_access_rights_file_read_attributes, flags, ec);
 
-        WCHAR                     buf[MAXIMUM_REPARSE_DATA_BUFFER_SIZE];
+        BYTE                      buf[MAXIMUM_REPARSE_DATA_BUFFER_SIZE];
         USHORT                    len;
-        const WCHAR               *offset;
+        WCHAR                    *offset;
         _fs_reparse_data_buffer_t *rdata;
 
         if (_FS_IS_ERROR_SET(ec))
                 return NULL;
 
-        if (!DeviceIoControl(hFile, FSCTL_GET_REPARSE_POINT, NULL, 0, buf, MAXIMUM_REPARSE_DATA_BUFFER_SIZE, NULL, NULL)) {
+        if (!DeviceIoControl(hFile, FSCTL_GET_REPARSE_POINT, NULL, 0, buf, sizeof(buf), 0, NULL)) {
                 _FS_SYSTEM_ERROR(ec, GetLastError());
                 CloseHandle(hFile);
                 return NULL;
@@ -1883,26 +1895,46 @@ static fs_path_t _fs_win32_read_symlink(const fs_cpath_t p, fs_error_code_t *con
 
         rdata = (_fs_reparse_data_buffer_t *)buf;
         if (rdata->reparse_tag == _fs_reparse_tag_symlink) {
-                const _fs_symbolic_link_reparse_buffer_t *sbuf = &rdata->buffer.symbolic_link_reparse_buffer;
-                const USHORT name_length                       = sbuf->print_name_length / sizeof(WCHAR);
+                _fs_symbolic_link_reparse_buffer_t *sbuf = &rdata->buffer.symbolic_link_reparse_buffer;
+                const USHORT name_length                 = sbuf->print_name_length / sizeof(WCHAR);
 
-                if (name_length == 0) {
-                        len     = sbuf->substitute_name_length / sizeof(WCHAR);
-                        offset = &sbuf->path_buffer[sbuf->substitute_name_offset / sizeof(WCHAR)];
-                } else {
+                if (name_length != 0) {
                         len    = name_length;
                         offset = &sbuf->path_buffer[sbuf->print_name_offset / sizeof(WCHAR)];
+                } else {
+                        len    = sbuf->substitute_name_length / sizeof(WCHAR);
+                        offset = &sbuf->path_buffer[sbuf->substitute_name_offset / sizeof(WCHAR)];
+
+                        if (len >= 4 && wcsncmp(offset, L"\\??\\", 4) == 0) {
+                                offset += 4;
+                                len    -= 4;
+                                if (len >= 4 && wcsncmp(offset, L"UNC\\", 4) == 0) {
+                                        offset += 2;
+                                        len    -= 2;
+                                        *offset = L'\\';
+                                }
+                        }
                 }
         } else if (rdata->reparse_tag == _fs_reparse_tag_mount_point) {
-                const _fs_mount_point_reparse_buffer_t *jbuf = &rdata->buffer.mount_point_reparse_buffer;
-                const USHORT name_length                     = jbuf->print_name_length / sizeof(WCHAR);
+                _fs_mount_point_reparse_buffer_t *jbuf = &rdata->buffer.mount_point_reparse_buffer;
+                const USHORT name_length               = jbuf->print_name_length / sizeof(WCHAR);
 
-                if (name_length == 0) {
-                        len    = jbuf->substitute_name_length / sizeof(WCHAR);
-                        offset = &jbuf->path_buffer[jbuf->substitute_name_offset / sizeof(WCHAR)];
-                } else {
+                if (name_length != 0) {
                         len    = name_length;
                         offset = &jbuf->path_buffer[jbuf->print_name_offset / sizeof(WCHAR)];
+                } else {
+                        len    = jbuf->substitute_name_length / sizeof(WCHAR);
+                        offset = &jbuf->path_buffer[jbuf->substitute_name_offset / sizeof(WCHAR)];
+
+                        if (len >= 4 && wcsncmp(offset, L"\\??\\", 4) == 0) {
+                                offset += 4;
+                                len    -= 4;
+                                if (len >= 4 && wcsncmp(offset, L"UNC\\", 4) == 0) {
+                                        offset += 2;
+                                        len    -= 2;
+                                        *offset = L'\\';
+                                }
+                        }
                 }
         } else {
                 _FS_SYSTEM_ERROR(ec, fs_win_error_reparse_tag_invalid);
@@ -1943,13 +1975,13 @@ static void _fs_posix_copy_file_fallback(const int in, const int out, fs_error_c
 {
         ssize_t bytes = 0;
 
-        char buffer[8192];
+        char buf[8192];
 
-        while ((bytes = read(in, buffer, 8192)) > 0) {
+        while ((bytes = read(in, buf, sizeof(buf))) > 0) {
                 ssize_t missing = 0;
                 while (missing < bytes) {
                         const ssize_t copied = write(
-                                out, buffer + missing, bytes - missing);
+                                out, buf + missing, bytes - missing);
                         if (copied < 0) {
                                 _FS_SYSTEM_ERROR(ec, errno);
                                 return;
@@ -3581,11 +3613,6 @@ extern void fs_create_hard_link(const fs_cpath_t target, const fs_cpath_t lnk, f
 
 extern void fs_create_symlink(const fs_cpath_t target, const fs_cpath_t link, fs_error_code_t *ec)
 {
-#if defined(_WIN32) && defined(_FS_SYMLINKS_SUPPORTED)
-        DWORD attr;
-        DWORD flags;
-#endif /* _WIN32 && _FS_SYMLINKS_SUPPORTED */
-
         _FS_CLEAR_ERROR_CODE(ec);
 
 #ifdef _FS_SYMLINKS_SUPPORTED
@@ -3599,15 +3626,14 @@ extern void fs_create_symlink(const fs_cpath_t target, const fs_cpath_t link, fs
                 return;
         }
 
-#ifdef _WIN32
-        attr = _fs_win32_get_file_attributes(target, ec);
-        if (attr == _fs_file_attr_invalid)
+        if (!fs_is_regular_file(target, ec) || _FS_IS_ERROR_SET(ec)) {
+                if (_FS_IS_ERROR_SET(ec))
+                        _FS_CFS_ERROR(ec, fs_cfs_error_is_a_directory);
                 return;
+        }
 
-        flags = _FS_ANY_FLAG_SET(attr, _fs_file_attr_directory)
-                ? _fs_symbolic_link_flag_directory
-                : _fs_symbolic_link_flag_none;
-        _fs_win32_create_symbolic_link(link, target, flags, ec);
+#ifdef _WIN32
+        _fs_win32_create_symbolic_link(link, target, _fs_symbolic_link_flag_none | _fs_symbolic_link_flag_allow_unprivileged_create, ec);
 #else /* !_WIN32 */
         if (symlink(target, link))
                 _FS_SYSTEM_ERROR(ec, errno);
@@ -3619,9 +3645,38 @@ extern void fs_create_symlink(const fs_cpath_t target, const fs_cpath_t link, fs
 #endif /* !_FS_SYMLINKS_SUPPORTED */
 }
 
-void fs_create_directory_symlink(const fs_cpath_t target, const fs_cpath_t link, fs_error_code_t *const ec)
+extern void fs_create_directory_symlink(const fs_cpath_t target, const fs_cpath_t link, fs_error_code_t *ec)
 {
-        fs_create_symlink(target, link, ec);
+        _FS_CLEAR_ERROR_CODE(ec);
+
+#ifdef _FS_SYMLINKS_SUPPORTED
+        if (!target || !link) {
+                _FS_CFS_ERROR(ec, fs_cfs_error_invalid_argument);
+                return;
+        }
+
+        if (_FS_IS_EMPTY(target) || _FS_IS_EMPTY(link)) {
+                _FS_CFS_ERROR(ec, fs_cfs_error_invalid_argument);
+                return;
+        }
+
+        if (!fs_is_directory(target, ec) || _FS_IS_ERROR_SET(ec)) {
+                if (_FS_IS_ERROR_SET(ec))
+                        _FS_CFS_ERROR(ec, fs_cfs_error_not_a_directory);
+                return;
+        }
+
+#ifdef _WIN32
+        _fs_win32_create_symbolic_link(link, target, _fs_symbolic_link_flag_directory | _fs_symbolic_link_flag_allow_unprivileged_create, ec);
+#else /* !_WIN32 */
+        if (symlink(target, link))
+                _FS_SYSTEM_ERROR(ec, errno);
+#endif /* !_WIN32 */
+#else /* !_FS_SYMLINKS_SUPPORTED */
+        (void)target;
+        (void)link;
+        _FS_CFS_ERROR(ec, fs_cfs_error_function_not_supported);
+#endif /* !_FS_SYMLINKS_SUPPORTED */
 }
 
 extern fs_path_t fs_current_path(fs_error_code_t *ec)
