@@ -1,11 +1,15 @@
 # Version 1.0.0
 
- - [ ] File API (write, read, create)
- - [ ] Make fs_path_t a struct to avoid implicit conversions on posix with fs_path_t = "..."
- - [ ] Use more specific includes instead of `Windows.h`
- - [ ] `likely()` and `unlikely()` macros for `if`s if available
- - [ ] Lazy directory and recursive directory iterators
- - [ ] Proper 64 bit file handling (_FILE_OFFSET_BITS, \*64 functions)
+ - [ ] Documentation
+
+# Version 1.1.0-beta
+
+- [ ] File API (write, read, create)
+- [ ] Make fs_path_t a struct to avoid implicit conversions on posix with fs_path_t = "..."
+- [ ] Use more specific includes instead of `Windows.h`
+- [ ] `likely()` and `unlikely()` macros for `if`s if available
+- [ ] Lazy directory and recursive directory iterators
+- [ ] Proper 64 bit file handling (_FILE_OFFSET_BITS, \*64 functions)
 
 # Version 1.0.0-beta
 
