@@ -1,10 +1,6 @@
 #ifndef CFS_H
 #define CFS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifdef __CLION_IDE__
 #define CFS_IMPLEMENTATION
 #endif /* __CLION_IDE__ */
@@ -318,6 +314,10 @@ typedef struct fs_dir_iter {
 
 typedef fs_dir_iter_t fs_recursive_dir_iter_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern void fs_free(fs_path_t p);
 
 extern fs_path_t fs_make_path(const char *p, fs_error_code_t *ec);
@@ -516,6 +516,10 @@ extern fs_recursive_dir_iter_t fs_recursive_directory_iterator(fs_cpath_t p, fs_
 
 extern fs_recursive_dir_iter_t fs_recursive_directory_iterator_opt(fs_cpath_t p, fs_directory_options_t options, fs_error_code_t *ec);
 
+#ifdef __cplusplus
+}
+#endif
+
 #define fs_recursive_dir_iter_next(__it__) fs_dir_iter_next(__it__)
 
 #define fs_recursive_dir_iter_prev(__it__) fs_dir_iter_prev(__it__)
@@ -546,8 +550,8 @@ do {                                                            \
         fs_cpath_t ___tmp_name_98365639;                        \
         (__it__).pos = 0;                                       \
         FOR_EACH_ENTRY_IN_DIR(___tmp_name_98365639, __it__)     \
-                fs_free((void *)___tmp_name_98365639);          \
-        fs_free((void *)(__it__).elems);                        \
+                fs_free((fs_path_t)___tmp_name_98365639);       \
+        fs_free((fs_path_t)(__it__).elems);                     \
         (__it__).elems = NULL;                                  \
 } while (FS_FALSE)
 
@@ -580,6 +584,9 @@ do {                                                            \
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+typedef fs_char_t       *_fs_char_it_t;
+typedef const fs_char_t *_fs_char_cit_t;
 
 static _FS_THREAD_LOCAL fs_error_code_t _fs_internal_error = _FS_EMPTY_INIT;
 
@@ -739,6 +746,30 @@ typedef enum _fs_symbolic_link_flags {
 
 } _fs_symbolic_link_flag_t;
 
+typedef struct _fs_symbolic_link_reparse_buffer {
+        USHORT substitute_name_offset;
+        USHORT substitute_name_length;
+        USHORT print_name_offset;
+        USHORT print_name_length;
+        ULONG  flags;
+        WCHAR  path_buffer[1];
+
+} _fs_symbolic_link_reparse_buffer_t;
+
+typedef struct _fs_mount_point_reparse_buffer {
+        USHORT substitute_name_offset;
+        USHORT substitute_name_length;
+        USHORT print_name_offset;
+        USHORT print_name_length;
+        WCHAR  path_buffer[1];
+
+} _fs_mount_point_reparse_buffer_t;
+
+typedef struct _fs_generic_reparse_buffer {
+        UCHAR data_buffer[1];
+
+} _fs_generic_reparse_buffer_t;
+
 typedef struct _fs_reparse_data_buffer {
         ULONG  reparse_tag;
         USHORT reparse_data_length;
@@ -765,9 +796,6 @@ typedef struct _fs_reparse_data_buffer {
         } buffer;
 
 } _fs_reparse_data_buffer_t;
-typedef struct _fs_symbolic_link_reparse_buffer _fs_symbolic_link_reparse_buffer_t;
-typedef struct _fs_mount_point_reparse_buffer   _fs_mount_point_reparse_buffer_t;
-typedef struct _fs_generic_reparse_buffer       _fs_generic_reparse_buffer_t;
 #endif /* _FS_SYMLINKS_SUPPORTED */
 
 #define _FS_WIN32_API_CALL_FOO_BODY(__ret__, __foo__, __get_args__, __err__, __path__, __separator__, __ec__)   \
@@ -1086,169 +1114,170 @@ fs_bool_t fs_is_##__what__(fs_cpath_t p, fs_error_code_t *ec)                   
 
 #define _fs_has_filename_impl(__path__) (_fs_has_filename(_fs_find_filename(__path__, NULL), (__path__) + _FS_STRLEN(__path__)))
 
-typedef fs_char_t       *_fs_char_it_t;
-typedef const fs_char_t *_fs_char_cit_t;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 static const char *_fs_error_string(const fs_error_type_t type, const int e)
 {
         switch (type) {
-        case fs_error_type_none:
-                if (!e)
-                        return "cfs error: success";
-                break;
-        case fs_error_type_cfs:
-                switch((fs_cfs_error_t)e) {
-                case fs_cfs_error_success:
-                        return "cfs error: success";
-                case fs_cfs_error_no_such_file_or_directory:
-                        return "cfs error: no such file or directory";
-                case fs_cfs_error_out_of_memory:
-                        return "cfs error: out of memory";
-                case fs_cfs_error_file_exists:
-                        return "cfs error: file already exists";
-                case fs_cfs_error_not_a_directory:
-                        return "cfs error: iter is not a directory";
-                case fs_cfs_error_is_a_directory:
-                        return "cfs error: item is a directory";
-                case fs_cfs_error_invalid_argument:
-                        return "cfs error: invalid argument";
-                case fs_cfs_error_name_too_long:
-                        return "cfs error: name too long";
-                case fs_cfs_error_function_not_supported:
-                        return "cfs error: function not supported";
-                case fs_cfs_error_loop:
-                        return "cfs error: symlink loop";
-                }
-                break;
-        case fs_error_type_system:
+                case fs_error_type_none:
+                        if (!e)
+                                return "cfs error: success";
+                        break;
+                case fs_error_type_cfs:
+                        switch((fs_cfs_error_t)e) {
+                                case fs_cfs_error_success:
+                                        return "cfs error: success";
+                                case fs_cfs_error_no_such_file_or_directory:
+                                        return "cfs error: no such file or directory";
+                                case fs_cfs_error_out_of_memory:
+                                        return "cfs error: out of memory";
+                                case fs_cfs_error_file_exists:
+                                        return "cfs error: file already exists";
+                                case fs_cfs_error_not_a_directory:
+                                        return "cfs error: iter is not a directory";
+                                case fs_cfs_error_is_a_directory:
+                                        return "cfs error: item is a directory";
+                                case fs_cfs_error_invalid_argument:
+                                        return "cfs error: invalid argument";
+                                case fs_cfs_error_name_too_long:
+                                        return "cfs error: name too long";
+                                case fs_cfs_error_function_not_supported:
+                                        return "cfs error: function not supported";
+                                case fs_cfs_error_loop:
+                                        return "cfs error: symlink loop";
+                        }
+                        break;
+                case fs_error_type_system:
 #ifdef _WIN32
-                switch ((fs_win_errors_t)e) {
-                case fs_win_error_success:
-                        return "cfs windows error: success";
-                case fs_win_error_invalid_function:
-                        return "cfs windows error: invalid function";
-                case fs_win_error_file_not_found:
-                        return "cfs windows error: file not found";
-                case fs_win_error_path_not_found:
-                        return "cfs windows error: path not found";
-                case fs_win_error_access_denied:
-                        return "cfs windows error: access denied";
-                case fs_win_error_not_enough_memory:
-                        return "cfs windows error: not enough memory";
-                case fs_win_error_no_more_files:
-                        return "cfs windows error: no more files";
-                case fs_win_error_sharing_violation:
-                        return "cfs windows error: sharing violation";
-                case fs_win_error_not_supported:
-                        return "cfs windows error: not supported";
-                case fs_win_error_bad_netpath:
-                        return "cfs windows error: bad netpath";
-                case fs_win_error_netname_deleted:
-                        return "cfs windows error: netname deleted";
-                case fs_win_error_file_exists:
-                        return "cfs windows error: file exists";
-                case fs_win_error_invalid_parameter:
-                        return "cfs windows error: invalid parameter";
-                case fs_win_error_insufficient_buffer:
-                        return "cfs windows error: insufficient buffer";
-                case fs_win_error_invalid_name:
-                        return "cfs windows error: invalid name";
-                case fs_win_error_directory_not_empty:
-                        return "cfs windows error: directory not empty";
-                case fs_win_error_already_exists:
-                        return "cfs windows error: already exists";
-                case fs_win_error_filename_exceeds_range:
-                        return "cfs windows error: filename exceeds range";
-                case fs_win_error_directory_name_is_invalid:
-                        return "cfs windows error: invalid directory name";
-                case fs_win_error_privilege_not_held:
-                        return "cfs windows error: not enough permissions";
-                case fs_win_error_reparse_tag_invalid:
-                        return "cfs windows error: invalid reparse tag";
-                default:
-                        return "cfs windows error: unknown error";
-                }
+                        switch ((fs_win_errors_t)e) {
+                                case fs_win_error_success:
+                                        return "cfs windows error: success";
+                                case fs_win_error_invalid_function:
+                                        return "cfs windows error: invalid function";
+                                case fs_win_error_file_not_found:
+                                        return "cfs windows error: file not found";
+                                case fs_win_error_path_not_found:
+                                        return "cfs windows error: path not found";
+                                case fs_win_error_access_denied:
+                                        return "cfs windows error: access denied";
+                                case fs_win_error_not_enough_memory:
+                                        return "cfs windows error: not enough memory";
+                                case fs_win_error_no_more_files:
+                                        return "cfs windows error: no more files";
+                                case fs_win_error_sharing_violation:
+                                        return "cfs windows error: sharing violation";
+                                case fs_win_error_not_supported:
+                                        return "cfs windows error: not supported";
+                                case fs_win_error_bad_netpath:
+                                        return "cfs windows error: bad netpath";
+                                case fs_win_error_netname_deleted:
+                                        return "cfs windows error: netname deleted";
+                                case fs_win_error_file_exists:
+                                        return "cfs windows error: file exists";
+                                case fs_win_error_invalid_parameter:
+                                        return "cfs windows error: invalid parameter";
+                                case fs_win_error_insufficient_buffer:
+                                        return "cfs windows error: insufficient buffer";
+                                case fs_win_error_invalid_name:
+                                        return "cfs windows error: invalid name";
+                                case fs_win_error_directory_not_empty:
+                                        return "cfs windows error: directory not empty";
+                                case fs_win_error_already_exists:
+                                        return "cfs windows error: already exists";
+                                case fs_win_error_filename_exceeds_range:
+                                        return "cfs windows error: filename exceeds range";
+                                case fs_win_error_directory_name_is_invalid:
+                                        return "cfs windows error: invalid directory name";
+                                case fs_win_error_privilege_not_held:
+                                        return "cfs windows error: not enough permissions";
+                                case fs_win_error_reparse_tag_invalid:
+                                        return "cfs windows error: invalid reparse tag";
+                                default:
+                                        return "cfs windows error: unknown error";
+                        }
 #else /* !_WIN32 */
-                switch ((fs_posix_errors_t)e) {
-                case fs_posix_error_success:
-                        return "cfs posix error: success";
-                case fs_posix_error_operation_not_permitted:
-                        return "cfs posix error: operation not permitted";
-                case fs_posix_error_no_such_file_or_directory:
-                        return "cfs posix error: no such file or directory";
-                case fs_posix_error_interrupted_function_call:
-                        return "cfs posix error: interrupted function call";
-                case fs_posix_error_input_output_error:
-                        return "cfs posix error: input/output error";
-                case fs_posix_error_no_such_device_or_address:
-                        return "cfs posix error: no such device or address";
-                case fs_posix_error_bad_file_descriptor:
-                        return "cfs posix error: bad file descriptor";
-                case fs_posix_error_resource_temporarily_unavailable:
-                        return "cfs posix error: resource temporarily unavailable";
-                case fs_posix_error_cannot_allocate_memory:
-                        return "cfs posix error: cannot allocate memory";
-                case fs_posix_error_permission_denied:
-                        return "cfs posix error: permission denied";
-                case fs_posix_error_bad_address:
-                        return "cfs posix error: bad address";
-                case fs_posix_error_device_or_resource_busy:
-                        return "cfs posix error: device or resource busy";
-                case fs_posix_error_file_exists:
-                        return "cfs posix error: file exists";
-                case fs_posix_error_invalid_cross_device_link:
-                        return "cfs posix error: invalid cross device link";
-                case fs_posix_error_no_such_device:
-                        return "cfs posix error: no such device";
-                case fs_posix_error_not_a_directory:
-                        return "cfs posix error: not a directory";
-                case fs_posix_error_is_a_directory:
-                        return "cfs posix error: item is a directory";
-                case fs_posix_error_invalid_argument:
-                        return "cfs posix error: invalid argument";
-                case fs_posix_error_too_many_files_open_in_system:
-                        return "cfs posix error: too many files open in system";
-                case fs_posix_error_too_many_open_files:
-                        return "cfs posix error: too many open files";
-                case fs_posix_error_file_too_large:
-                        return "cfs posix error: file too large";
-                case fs_posix_error_no_space_left_on_disk:
-                        return "cfs posix error: no space left on disk";
-                case fs_posix_error_read_only_filesystem:
-                        return "cfs posix error: read only filesystem";
-                case fs_posix_error_too_many_links:
-                        return "cfs posix error: too many links";
-                case fs_posix_error_broken_pipe:
-                        return "cfs posix error: broken pipe";
-                case fs_posix_error_filename_too_long:
-                        return "cfs posix error: filename too long";
-                case fs_posix_error_function_not_implemented:
-                        return "cfs posix error: function not implemented";
-                case fs_posix_error_directory_not_empty:
-                        return "cfs posix error: directory not empty";
-                case fs_posix_error_destination_address_required:
-                        return "cfs posix error: destination address required";
-                case fs_posix_error_too_many_levels_of_symbolic_links:
-                        return "cfs posix error: too many levels of symbolic links";
-                case fs_posix_error_operation_not_supported:
-                        return "cfs posix error: operation not supported";
+                        switch ((fs_posix_errors_t)e) {
+                                case fs_posix_error_success:
+                                        return "cfs posix error: success";
+                                case fs_posix_error_operation_not_permitted:
+                                        return "cfs posix error: operation not permitted";
+                                case fs_posix_error_no_such_file_or_directory:
+                                        return "cfs posix error: no such file or directory";
+                                case fs_posix_error_interrupted_function_call:
+                                        return "cfs posix error: interrupted function call";
+                                case fs_posix_error_input_output_error:
+                                        return "cfs posix error: input/output error";
+                                case fs_posix_error_no_such_device_or_address:
+                                        return "cfs posix error: no such device or address";
+                                case fs_posix_error_bad_file_descriptor:
+                                        return "cfs posix error: bad file descriptor";
+                                case fs_posix_error_resource_temporarily_unavailable:
+                                        return "cfs posix error: resource temporarily unavailable";
+                                case fs_posix_error_cannot_allocate_memory:
+                                        return "cfs posix error: cannot allocate memory";
+                                case fs_posix_error_permission_denied:
+                                        return "cfs posix error: permission denied";
+                                case fs_posix_error_bad_address:
+                                        return "cfs posix error: bad address";
+                                case fs_posix_error_device_or_resource_busy:
+                                        return "cfs posix error: device or resource busy";
+                                case fs_posix_error_file_exists:
+                                        return "cfs posix error: file exists";
+                                case fs_posix_error_invalid_cross_device_link:
+                                        return "cfs posix error: invalid cross device link";
+                                case fs_posix_error_no_such_device:
+                                        return "cfs posix error: no such device";
+                                case fs_posix_error_not_a_directory:
+                                        return "cfs posix error: not a directory";
+                                case fs_posix_error_is_a_directory:
+                                        return "cfs posix error: item is a directory";
+                                case fs_posix_error_invalid_argument:
+                                        return "cfs posix error: invalid argument";
+                                case fs_posix_error_too_many_files_open_in_system:
+                                        return "cfs posix error: too many files open in system";
+                                case fs_posix_error_too_many_open_files:
+                                        return "cfs posix error: too many open files";
+                                case fs_posix_error_file_too_large:
+                                        return "cfs posix error: file too large";
+                                case fs_posix_error_no_space_left_on_disk:
+                                        return "cfs posix error: no space left on disk";
+                                case fs_posix_error_read_only_filesystem:
+                                        return "cfs posix error: read only filesystem";
+                                case fs_posix_error_too_many_links:
+                                        return "cfs posix error: too many links";
+                                case fs_posix_error_broken_pipe:
+                                        return "cfs posix error: broken pipe";
+                                case fs_posix_error_filename_too_long:
+                                        return "cfs posix error: filename too long";
+                                case fs_posix_error_function_not_implemented:
+                                        return "cfs posix error: function not implemented";
+                                case fs_posix_error_directory_not_empty:
+                                        return "cfs posix error: directory not empty";
+                                case fs_posix_error_destination_address_required:
+                                        return "cfs posix error: destination address required";
+                                case fs_posix_error_too_many_levels_of_symbolic_links:
+                                        return "cfs posix error: too many levels of symbolic links";
+                                case fs_posix_error_operation_not_supported:
+                                        return "cfs posix error: operation not supported";
 #if fs_posix_error_operation_not_supported != fs_posix_error_operation_not_supported_on_socket
-                case fs_posix_error_operation_not_supported_on_socket:
-                        return "cfs posix error: operation not supported on socket";
+                                case fs_posix_error_operation_not_supported_on_socket:
+                                        return "cfs posix error: operation not supported on socket";
 #endif
-                case fs_posix_error_value_too_large:
-                        return "cfs posix error: value too large";
-                case fs_posix_error_text_file_busy:
-                        return "cfs posix error: text file busy";
+                                case fs_posix_error_value_too_large:
+                                        return "cfs posix error: value too large";
+                                case fs_posix_error_text_file_busy:
+                                        return "cfs posix error: text file busy";
 #if fs_posix_error_resource_temporarily_unavailable != fs_posix_error_operation_would_block
-                case fs_posix_error_operation_would_block:
-                        return "cfs posix error: operation would block";
+                                case fs_posix_error_operation_would_block:
+                                        return "cfs posix error: operation would block";
 #endif
-                default:
-                        return "cfs posix error: unknown error";
-                }
+                                default:
+                                        return "cfs posix error: unknown error";
+                        }
 #endif /* !_WIN32 */
-                break;
+                        break;
         }
 
         return "cfs: invalid error type";
@@ -1381,7 +1410,7 @@ static _fs_char_cit_t _fs_find_root_name_end(const fs_cpath_t p)
                 if (_fs_win32_is_drive(p + 4))
                         return p + 6;
                 return p + 4;
-        }
+            }
 
         if (len >= 3 && _fs_is_separator(p[1]) && !_fs_is_separator(p[2])) { /* \\server\share */
                 _fs_char_cit_t rtname = p + 3;
@@ -1390,6 +1419,7 @@ static _fs_char_cit_t _fs_find_root_name_end(const fs_cpath_t p)
 
                 if (*rtname)
                         ++rtname;
+
                 while (*rtname && !_fs_is_separator(*rtname))
                         ++rtname;
 
@@ -1512,20 +1542,20 @@ static fs_bool_t _fs_is_junction_t(const fs_file_type_t t)
 static fs_bool_t _fs_is_other_t(const fs_file_type_t t)
 {
         switch(t) {
-        case fs_file_type_none:
-        case fs_file_type_not_found:
-        case fs_file_type_regular:
-        case fs_file_type_directory:
-        case fs_file_type_symlink:
-                return FS_FALSE;
-        case fs_file_type_block:
-        case fs_file_type_character:
-        case fs_file_type_fifo:
-        case fs_file_type_socket:
-        case fs_file_type_unknown:
-        case fs_file_type_junction:
-        default:
-                return FS_TRUE;
+                case fs_file_type_none:
+                case fs_file_type_not_found:
+                case fs_file_type_regular:
+                case fs_file_type_directory:
+                case fs_file_type_symlink:
+                        return FS_FALSE;
+                case fs_file_type_block:
+                case fs_file_type_character:
+                case fs_file_type_fifo:
+                case fs_file_type_socket:
+                case fs_file_type_unknown:
+                case fs_file_type_junction:
+                default:
+                        return FS_TRUE;
         }
 }
 
@@ -1788,7 +1818,7 @@ static BOOLEAN _fs_win32_create_symbolic_link(const LPCWSTR link, const LPCWSTR 
             && err == fs_win_error_invalid_parameter) {
                 _fs_free(t);
                 return _fs_win32_create_symbolic_link(link, target, flags & ~_fs_symbolic_link_flag_allow_unprivileged_create, ec);
-        }
+            }
 #endif /* SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE */
 
         if (!_FS_IS_ERROR_EXCEED(err)) {
@@ -1808,17 +1838,17 @@ static BOOLEAN _fs_win32_create_symbolic_link(const LPCWSTR link, const LPCWSTR 
                 _FS_SYSTEM_ERROR(ec, GetLastError());
         _fs_free(unc1);
 
-defer:
-        _fs_free(t);
+        defer:
+                _fs_free(t);
         return ret;
 }
 #endif /* _FS_SYMLINKS_SUPPORTED */
 
 static HANDLE _fs_win32_get_handle(const fs_cpath_t p, const _fs_access_rights_t rights, const _fs_file_flags_t flags, fs_error_code_t *const ec)
 {
-        const _fs_file_share_flags_t share = _fs_file_share_flags_read
+        const _fs_file_share_flags_t share = (_fs_file_share_flags_t)(_fs_file_share_flags_read
                 | _fs_file_share_flags_write
-                | _fs_file_share_flags_delete;
+                | _fs_file_share_flags_delete);
         const HANDLE handle = _fs_win32_create_file(p, rights, share, NULL, OPEN_EXISTING, flags, NULL, ec);
         if (handle == INVALID_HANDLE_VALUE)
                 return INVALID_HANDLE_VALUE;
@@ -1908,8 +1938,8 @@ static void _fs_win32_change_file_permissions(const fs_cpath_t p, const fs_bool_
 
 #ifdef _FS_SYMLINKS_SUPPORTED
         if (follow && _FS_ANY_FLAG_SET(oldattrs, _fs_file_attr_reparse_point)) {
-                const _fs_access_rights_t flags = _fs_access_rights_file_read_attributes
-                        | _fs_access_rights_file_write_attributes;
+                const _fs_access_rights_t flags = (_fs_access_rights_t)(_fs_access_rights_file_read_attributes
+                        | _fs_access_rights_file_write_attributes);
                 const HANDLE handle             = _fs_win32_get_handle(
                         p, flags, _fs_file_flags_backup_semantics, ec);
 
@@ -1932,8 +1962,8 @@ static void _fs_win32_change_file_permissions(const fs_cpath_t p, const fs_bool_
 
                 _FS_SYSTEM_ERROR(ec, GetLastError());
 
-defer:
-                CloseHandle(handle);
+                defer:
+                                CloseHandle(handle);
                 return;
         }
 #else /* !_FS_SYMLINKS_SUPPORTED */
@@ -1952,9 +1982,9 @@ defer:
 #ifdef _FS_SYMLINKS_SUPPORTED
 static fs_path_t _fs_win32_read_symlink(const fs_cpath_t p, fs_error_code_t *const ec)
 {
-        const DWORD flags = _fs_file_flags_backup_semantics
-                | _fs_file_flags_open_reparse_point;
-        const HANDLE hFile = _fs_win32_get_handle(
+        const _fs_file_flags_t flags = (_fs_file_flags_t)(_fs_file_flags_backup_semantics
+                | _fs_file_flags_open_reparse_point);
+        const HANDLE hFile           = _fs_win32_get_handle(
                 p, _fs_access_rights_file_read_attributes, flags, ec);
 
         BYTE                      buf[MAXIMUM_REPARSE_DATA_BUFFER_SIZE];
@@ -1973,7 +2003,7 @@ static fs_path_t _fs_win32_read_symlink(const fs_cpath_t p, fs_error_code_t *con
 
         rdata = (_fs_reparse_data_buffer_t *)buf;
         if (rdata->reparse_tag == _fs_reparse_tag_symlink) {
-                _fs_symbolic_link_reparse_buffer_t *sbuf = &rdata->buffer.symbolic_link_reparse_buffer;
+                _fs_symbolic_link_reparse_buffer_t *sbuf = (_fs_symbolic_link_reparse_buffer_t *)&rdata->buffer.symbolic_link_reparse_buffer;
                 const USHORT name_length                 = sbuf->print_name_length / sizeof(WCHAR);
 
                 if (name_length != 0) {
@@ -1994,7 +2024,7 @@ static fs_path_t _fs_win32_read_symlink(const fs_cpath_t p, fs_error_code_t *con
                         }
                 }
         } else if (rdata->reparse_tag == _fs_reparse_tag_mount_point) {
-                _fs_mount_point_reparse_buffer_t *jbuf = &rdata->buffer.mount_point_reparse_buffer;
+                _fs_mount_point_reparse_buffer_t *jbuf = (_fs_mount_point_reparse_buffer_t *)&rdata->buffer.mount_point_reparse_buffer;
                 const USHORT name_length               = jbuf->print_name_length / sizeof(WCHAR);
 
                 if (name_length != 0) {
@@ -2122,7 +2152,7 @@ static fs_bool_t _fs_posix_copy_file_range(const int in, const int out, const fs
             && err != fs_posix_error_no_such_file_or_directory
             && err != fs_posix_error_function_not_implemented) {
                 _FS_SYSTEM_ERROR(ec, err);
-        }
+            }
 
         return FS_FALSE;
 }
@@ -2225,9 +2255,9 @@ static void _fs_posix_copy_file(const fs_cpath_t from, const fs_cpath_t to, cons
 
         _fs_posix_copy_file_fallback(in, out, ec);
 
-clean:
-        if (in != -1)
-                close(in);
+        clean:
+                if (in != -1)
+                        close(in);
         if (out != -1)
                 close(out);
 }
@@ -2294,8 +2324,8 @@ static fs_bool_t _find_next(const _fs_dir_t dir, _fs_dir_entry_t *const entry, c
         *entry = tmp;
         return FS_TRUE;
 
-err:
-        *entry = NULL;
+        err:
+                *entry = NULL;
         return FS_FALSE;
 #endif /* !_WIN32 */
 }
@@ -2378,12 +2408,12 @@ static _fs_stat_t _fs_win32_get_file_stat(fs_cpath_t p, _fs_stats_flag_t flags, 
         const fs_bool_t follow        = _FS_ANY_FLAG_SET(flags, _fs_stats_flag_follow_symlinks);
         const _fs_file_flags_t fflags = follow ?
                 _fs_file_flags_backup_semantics :
-                _fs_file_flags_backup_semantics | _fs_file_flags_open_reparse_point;
+                (_fs_file_flags_t)(_fs_file_flags_backup_semantics | _fs_file_flags_open_reparse_point);
 #else
         const fs_bool_t follow = FS_FALSE;
 #endif
 
-        flags &= ~_fs_stats_flag_follow_symlinks;
+        flags = (_fs_stats_flag_t)(flags & ~_fs_stats_flag_follow_symlinks);
         if (follow && _FS_ANY_FLAG_SET(flags, _fs_stats_flag_reparse_tag)) {
                 _FS_CFS_ERROR(ec, fs_cfs_error_invalid_argument);
                 return out;
@@ -2417,14 +2447,14 @@ static _fs_stat_t _fs_win32_get_file_stat(fs_cpath_t p, _fs_stats_flag_t flags, 
                 attrs = data.dwFileAttributes;
                 if (!follow || !_FS_ANY_FLAG_SET(attrs, _fs_file_attr_reparse_point)) {
                         out.attributes = attrs;
-                        flags         &= ~_fs_stats_flag_attributes;
+                        flags          = (_fs_stats_flag_t)(flags & ~_fs_stats_flag_attributes);
                 }
 
                 if (!_FS_ANY_FLAG_SET(attrs, _fs_file_attr_reparse_point)
                     && _FS_ANY_FLAG_SET(flags, _fs_stats_flag_reparse_tag)) {
                         out.reparse_point_tag = _fs_reparse_tag_none;
-                        flags                &= ~_fs_stats_flag_reparse_tag;
-                }
+                        flags                 = (_fs_stats_flag_t)(flags & ~_fs_stats_flag_reparse_tag);
+                    }
         }
 
         if (flags == _fs_stats_flag_none)
@@ -2445,7 +2475,7 @@ static _fs_stat_t _fs_win32_get_file_stat(fs_cpath_t p, _fs_stats_flag_t flags, 
                 }
 
                 out.attributes = info.FileAttributes;
-                flags         &= ~_fs_stats_flag_attributes;
+                flags          = (_fs_stats_flag_t)(flags & ~_fs_stats_flag_attributes);
 
                 if (_FS_ANY_FLAG_SET(flags, _fs_stats_flag_reparse_tag)) {
                         /* From Microsoft STL:
@@ -2465,11 +2495,11 @@ static _fs_stat_t _fs_win32_get_file_stat(fs_cpath_t p, _fs_stats_flag_t flags, 
                                 out.reparse_point_tag = _fs_reparse_tag_none;
                         }
 
-                        flags &= ~_fs_stats_flag_reparse_tag;
+                        flags = (_fs_stats_flag_t)(flags & ~_fs_stats_flag_reparse_tag);
                 }
-        }
-defer:
-        CloseHandle(handle);
+            }
+        defer:
+                CloseHandle(handle);
 #endif /* !_FS_SYMLINKS_SUPPORTED */
 
         if (flags != _fs_stats_flag_none)
@@ -2639,7 +2669,7 @@ static fs_file_status_t _status(const fs_cpath_t p, _fs_stat_t *outst, fs_error_
         if (!outst)
                 outst = &st;
 
-        flags  = _fs_stats_flag_attributes | _fs_stats_flag_follow_symlinks;
+        flags  = (_fs_stats_flag_t)(_fs_stats_flag_attributes | _fs_stats_flag_follow_symlinks);
         *outst = _fs_win32_get_file_stat(p, flags, ec);
         if (_FS_IS_ERROR_SET(ec)) {
                 const fs_file_status_t emtpy = _FS_EMPTY_INIT;
@@ -2660,10 +2690,10 @@ static fs_file_status_t _status(const fs_cpath_t p, _fs_stat_t *outst, fs_error_
                     || err == fs_posix_error_not_a_directory) {
                         ret.type = fs_file_type_not_found;
                         return ret;
-                } if (err == fs_posix_error_value_too_large) {
-                        ret.type = fs_file_type_unknown;
-                        return ret;
-                }
+                    } if (err == fs_posix_error_value_too_large) {
+                            ret.type = fs_file_type_unknown;
+                            return ret;
+                    }
                 _FS_SYSTEM_ERROR(ec, err);
         } else {
                 return _make_status(outst, ec);
@@ -2683,7 +2713,7 @@ static fs_file_status_t _symlink_status(const fs_cpath_t p, _fs_stat_t *outst, f
         if (!outst)
                 outst = &st;
 
-        flags  = _fs_stats_flag_attributes | _fs_stats_flag_reparse_tag;
+        flags  = (_fs_stats_flag_t)(_fs_stats_flag_attributes | _fs_stats_flag_reparse_tag);
         *outst = _fs_win32_get_file_stat(p, flags, ec);
         if (_FS_IS_ERROR_SET(ec)) {
                 const fs_file_status_t emtpy = _FS_EMPTY_INIT;
@@ -2704,7 +2734,7 @@ static fs_file_status_t _symlink_status(const fs_cpath_t p, _fs_stat_t *outst, f
                     || err == fs_posix_error_not_a_directory) {
                         ret.type = fs_file_type_not_found;
                         return ret;
-                }
+                    }
 
                 _FS_SYSTEM_ERROR(ec, err);
         } else {
@@ -3125,13 +3155,13 @@ extern fs_path_t fs_weakly_canonical(const fs_cpath_t p, fs_error_code_t *ec)
         result = fs_path_lexically_normal(result, ec);
         _fs_free(tmp);
 
-defer:
-        FS_DESTROY_PATH_ITER(iter);
+        defer:
+                FS_DESTROY_PATH_ITER(iter);
         FS_DESTROY_PATH_ITER(end);
         return result;
 
-err:
-        _fs_free(tmp);
+        err:
+                _fs_free(tmp);
         _fs_free(result);
         result = NULL;
         goto defer;
@@ -3165,8 +3195,8 @@ extern fs_path_t fs_relative(const fs_cpath_t p, const fs_cpath_t base, fs_error
 
         ret = fs_path_lexically_relative(cpath, cbase, ec);
 
-defer:
-        _fs_free(cpath);
+        defer:
+                _fs_free(cpath);
         _fs_free(cbase);
         return ret;
 }
@@ -3197,8 +3227,8 @@ extern fs_path_t fs_proximate(const fs_cpath_t p, const fs_cpath_t base, fs_erro
 
         ret = fs_path_lexically_proximate(cpath, cbase, ec);
 
-defer:
-        _fs_free(cpath);
+        defer:
+                _fs_free(cpath);
         _fs_free(cbase);
         return ret;
 }
@@ -3247,7 +3277,7 @@ extern void fs_copy_opt(const fs_cpath_t from, const fs_cpath_t to, fs_copy_opti
         if (_fs_is_directory_t(ftype) && _FS_ANY_FLAG_SET(options, _fs_copy_options_In_recursive_copy)
             && !_FS_ANY_FLAG_SET(options, fs_copy_options_recursive | fs_copy_options_directories_only)) {
                 return;
-        }
+            }
 
         if (!_fs_exists_t(ftype)) {
                 _FS_CFS_ERROR(ec, fs_cfs_error_no_such_file_or_directory);
@@ -3356,12 +3386,12 @@ extern void fs_copy_opt(const fs_cpath_t from, const fs_cpath_t to, fs_copy_opti
                         if (!resolved)
                                 return;
 
-                        fs_copy_file_opt(from, resolved, options & _fs_copy_Existing_mask, ec);
+                        fs_copy_file_opt(from, resolved, (fs_copy_options_t)(options & _fs_copy_Existing_mask), ec);
                         _fs_free(resolved);
                         return;
                 }
 
-                fs_copy_file_opt(from, to, options & _fs_copy_Existing_mask, ec);
+                fs_copy_file_opt(from, to, (fs_copy_options_t)(options & _fs_copy_Existing_mask), ec);
                 return;
         }
 
@@ -3495,9 +3525,9 @@ extern void fs_copy_file_opt(const fs_cpath_t from, const fs_cpath_t to, const f
                         return;
         }
 
-copy:
-#ifdef _WIN32
-        _fs_win32_copy_file(from, to, FALSE, ec);
+        copy:
+        #ifdef _WIN32
+                _fs_win32_copy_file(from, to, FALSE, ec);
 #else
         _fs_posix_copy_file(from, to, &fst, ec);
 #endif
@@ -3712,8 +3742,8 @@ extern fs_bool_t fs_create_directories(const fs_cpath_t p, fs_error_code_t *ec)
         }
         ret = FS_TRUE;
 
-defer:
-        _fs_free(abs);
+        defer:
+                _fs_free(abs);
         _fs_free(current);
         FS_DESTROY_PATH_ITER(it);
         return ret;
@@ -3982,9 +4012,9 @@ extern fs_bool_t fs_equivalent(const fs_cpath_t p1, const fs_cpath_t p2, fs_erro
                 && info1.nFileIndexHigh == info2.nFileIndexHigh
                 && info1.nFileIndexLow == info2.nFileIndexLow;
 
-deref:
-        if (handle1 != INVALID_HANDLE_VALUE)
-                CloseHandle(handle1);
+        deref:
+                if (handle1 != INVALID_HANDLE_VALUE)
+                        CloseHandle(handle1);
         if (handle2 != INVALID_HANDLE_VALUE)
                 CloseHandle(handle2);
 
@@ -4422,13 +4452,13 @@ extern fs_bool_t fs_remove(const fs_cpath_t p, fs_error_code_t *ec)
                                 return FS_TRUE;
                 } else
 #endif
-                if (fs_is_directory_s(st) || _fs_is_junction_t(st.type)) {
-                        if (_FS_REMOVE_DIR(p, ec))
-                                return FS_TRUE;
-                } else {
-                        if (_FS_DELETE_FILE(p, ec))
-                                return FS_TRUE;
-                }
+                        if (fs_is_directory_s(st) || _fs_is_junction_t(st.type)) {
+                                if (_FS_REMOVE_DIR(p, ec))
+                                        return FS_TRUE;
+                        } else {
+                                if (_FS_DELETE_FILE(p, ec))
+                                        return FS_TRUE;
+                        }
 
                 if (!_FS_IS_ERROR_SET(ec))
                         _FS_SYSTEM_ERROR(ec, _FS_GET_SYSTEM_ERROR());
@@ -4592,10 +4622,10 @@ extern void fs_resize_file(const fs_cpath_t p, const fs_umax_t size, fs_error_co
         if (!_fs_win32_set_end_of_file(handle))
                 _FS_SYSTEM_ERROR(ec, GetLastError());
 
-defer:
-#endif /* !_FS_FILE_END_OF_FILE_AVAILABLE */
+        defer:
+        #endif /* !_FS_FILE_END_OF_FILE_AVAILABLE */
 
-        CloseHandle(handle);
+                CloseHandle(handle);
 #else /* !_WIN32 */
 #ifdef _FS_TRUNCATE_AVAILABLE
         if (size > _FS_OFF_MAX) {
@@ -4900,7 +4930,7 @@ extern fs_path_t fs_path_append(const fs_cpath_t p, const fs_cpath_t other, fs_e
         out = _fs_strdup(p, NULL, ec);
         if (!out)
                 return NULL;
-        
+
         fs_path_append_s(&out, other, ec);
         if (_FS_IS_ERROR_SET(ec)) {
                 _fs_free(out);
@@ -4960,10 +4990,10 @@ extern void fs_path_append_s(fs_path_t *pp, fs_cpath_t other, fs_error_code_t *e
 
         } else
 #endif /* _WIN32 */
-        if (!_fs_is_separator(plast[-1])) {
-                *plast = FS_PREFERRED_SEPARATOR;
-                ++plen;
-        }
+                if (!_fs_is_separator(plast[-1])) {
+                        *plast = FS_PREFERRED_SEPARATOR;
+                        ++plen;
+                }
 
         applen = olen - (ortnend - other);
         tmp      = (fs_path_t)_fs_realloc(p, (plen + applen + 1) * sizeof(fs_char_t), ec);
@@ -4977,8 +5007,8 @@ extern void fs_path_append_s(fs_path_t *pp, fs_cpath_t other, fs_error_code_t *e
         *pp = p;
         return;
 
-replace:
-        _fs_free(p);
+        replace:
+                _fs_free(p);
         *pp = _fs_strdup(other, NULL, ec);
 }
 
@@ -5365,12 +5395,12 @@ extern fs_path_t fs_path_lexically_normal(const fs_cpath_t p, fs_error_code_t *e
                 }
         }
 
-defer:
-        FS_DESTROY_PATH_ITER(it);
+        defer:
+                FS_DESTROY_PATH_ITER(it);
         return ret;
 
-err:
-        _fs_free(ret);
+        err:
+                _fs_free(ret);
         ret = NULL;
         goto defer;
 }
@@ -5449,7 +5479,7 @@ extern fs_path_t fs_path_lexically_relative(const fs_cpath_t p, const fs_cpath_t
                         goto err;
 
                 ++bdist;
-        }
+            }
 
         if (pit.pos == pend.pos && bit.pos == bend.pos) {
                 out = _FS_ALLOC_DOT(ec);
@@ -5505,15 +5535,15 @@ extern fs_path_t fs_path_lexically_relative(const fs_cpath_t p, const fs_cpath_t
                         goto err;
         }
 
-defer:
-        FS_DESTROY_PATH_ITER(pit);
+        defer:
+                FS_DESTROY_PATH_ITER(pit);
         FS_DESTROY_PATH_ITER(bit);
         FS_DESTROY_PATH_ITER(pend);
         FS_DESTROY_PATH_ITER(bend);
         return out;
 
-err:
-        _fs_free(out);
+        err:
+                _fs_free(out);
         out = NULL;
         goto defer;
 }
@@ -5982,8 +6012,8 @@ extern void fs_path_iter_next(fs_path_iter_t *const it, fs_error_code_t *ec)
         FS_DEREF_PATH_ITER(*it) = tmp;
         return;
 
-err:
-        it->pos = ogpos;
+        err:
+                it->pos = ogpos;
 }
 
 extern void fs_path_iter_prev(fs_path_iter_t *const it, fs_error_code_t *ec)
@@ -6042,8 +6072,8 @@ extern void fs_path_iter_prev(fs_path_iter_t *const it, fs_error_code_t *ec)
         FS_DEREF_PATH_ITER(*it) = tmp;
         return;
 
-err:
-        it->pos = ogpos;
+        err:
+                it->pos = ogpos;
 }
 
 extern fs_dir_iter_t fs_directory_iterator(const fs_cpath_t p, fs_error_code_t *const ec)
@@ -6119,13 +6149,13 @@ extern fs_dir_iter_t fs_directory_iterator_opt(const fs_cpath_t p, const fs_dire
         ret.pos      = 0;
         ret.elems    = elems;
 
-defer:
-        _FS_CLOSE_DIR(dir);
+        defer:
+                _FS_CLOSE_DIR(dir);
         return ret;
 
-err:
-        for (i = 0; i < count; ++i)
-                _fs_free((void *)elems[i]);
+        err:
+                for (i = 0; i < count; ++i)
+                        _fs_free((void *)elems[i]);
         _fs_free(elems);
         goto defer;
 }
@@ -6196,10 +6226,10 @@ extern fs_recursive_dir_iter_t fs_recursive_directory_iterator_opt(const fs_cpat
         return ret;
 }
 
-#endif /* CFS_IMPLEMENTATION */
-
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* CFS_IMPLEMENTATION */
 
 #endif /* CFS_H */
