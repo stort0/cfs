@@ -775,24 +775,9 @@ typedef struct _fs_reparse_data_buffer {
         USHORT reparse_data_length;
         USHORT reserved;
         union {
-                struct _fs_symbolic_link_reparse_buffer {
-                        USHORT substitute_name_offset;
-                        USHORT substitute_name_length;
-                        USHORT print_name_offset;
-                        USHORT print_name_length;
-                        ULONG  flags;
-                        WCHAR  path_buffer[1];
-                } symbolic_link_reparse_buffer;
-                struct _fs_mount_point_reparse_buffer {
-                        USHORT substitute_name_offset;
-                        USHORT substitute_name_length;
-                        USHORT print_name_offset;
-                        USHORT print_name_length;
-                        WCHAR  path_buffer[1];
-                } mount_point_reparse_buffer;
-                struct _fs_generic_reparse_buffer {
-                        UCHAR data_buffer[1];
-                } generic_reparse_buffer;
+                _fs_symbolic_link_reparse_buffer_t symbolic_link_reparse_buffer;
+                _fs_mount_point_reparse_buffer_t   mount_point_reparse_buffer;
+                _fs_generic_reparse_buffer_t       generic_reparse_buffer;
         } buffer;
 
 } _fs_reparse_data_buffer_t;
@@ -1417,7 +1402,7 @@ static _fs_char_cit_t _fs_find_root_name_end(const fs_cpath_t p)
                 while (*rtname && !_fs_is_separator(*rtname))
                         ++rtname;
 
-                if (*rtname)
+                if (*rtname && rtname[1]) /* consume '\' only if not last char \\srv\ -> "\\srv" */
                         ++rtname;
 
                 while (*rtname && !_fs_is_separator(*rtname))
